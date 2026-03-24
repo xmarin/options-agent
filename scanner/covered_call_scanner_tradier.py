@@ -448,8 +448,21 @@ def main():
     latest_out = os.path.join("reports", "covered_call_report_latest.csv")
     df.to_csv(latest_out, index=False)
 
+    os.makedirs("published", exist_ok=True)
+
+    published_dated_out = os.path.join(
+        "published",
+        f"covered_call_report_{date.today().isoformat()}.csv"
+    )
+    df.to_csv(published_dated_out, index=False)
+
+    published_latest_out = os.path.join("published", "covered_call_report_latest.csv")
+    df.to_csv(published_latest_out, index=False)
+
     print(f"\nSaved CSV: {dated_out}")
     print(f"Saved latest CSV: {latest_out}")
+    print(f"Saved published CSV: {published_dated_out}")
+    print(f"Saved published latest CSV: {published_latest_out}")
     print("\nTop 20:")
     print(df.head(20).to_string(index=False))
 
