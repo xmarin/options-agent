@@ -1,0 +1,15 @@
+{
+  "report_date": "2026-03-25",
+  "best_trade": {
+    "ticker": "GLD",
+    "reason": "GLD shows high implied volatility percentile (100%), decent weekly income with 0.6% return on capital, and limited earnings risk, making it an attractive covered call candidate in a stable to neutral trend.",
+    "biggest_risk": "The stock price has been trending downward over 20 days (-12%), suggesting potential further downside which could offset income gains."
+  },
+  "overall_summary": "This week's top candidates are favored due to elevated implied volatility and attractive weekly premiums. Most names avoid earnings-related risks, reducing unexpected volatility. However, some show weak short-term technicals suggesting caution. GLD stands out for solid income relative to risk and stable implied volatility environment.",
+  "top_10_notes": [
+    {
+      "ticker": "GLD",
+      "comment": "Ranks highly due to 100% IV percentile and no earnings risk, offering strong premiums despite a recent negative 20-day return."
+    }
+  ]
+}
