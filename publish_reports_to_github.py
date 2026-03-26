@@ -1,6 +1,10 @@
 import os
+import shutil
 import subprocess
+import tempfile
 from datetime import date
+from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,44 +16,67 @@ GITHUB_REPO = os.getenv("GITHUB_REPO", "xmarin/options-agent")
 if not GITHUB_USERNAME or not GITHUB_TOKEN:
     raise RuntimeError("Missing GITHUB_USERNAME or GITHUB_TOKEN in environment")
 
-TOKENIZED_REPO_URL = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/{GITHUB_REPO}.git"
+REPO_URL = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/{GITHUB_REPO}.git"
+LOCAL_PUBLISHED_DIR = Path("published")
 
 
-def run(cmd: list[str]) -> None:
+def run(cmd, cwd=None):
     print("Running:", " ".join(cmd))
-    subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True, cwd=cwd)
 
 
-def get_remote_url() -> str:
-    result = subprocess.run(
-        ["git", "remote", "get-url", "origin"],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return result.stdout.strip()
+def main():
+    if not LOCAL_PUBLISHED_DIR.exists():
+        raise RuntimeError("Local published/ folder does not exist")
 
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_dir = Path(tmpdir) / "repo"
 
-def main() -> None:
-    original_remote = get_remote_url()
+        # Clone fresh repo into temp directory
+        run(["git", "clone", REPO_URL, str(repo_dir)])
 
-    try:
-        run(["git", "config", "--global", "user.name", GITHUB_USERNAME])
-        run(["git", "config", "--global", "user.email", f"{GITHUB_USERNAME}@users.noreply.github.com"])
-        run(["git", "remote", "set-url", "origin", TOKENIZED_REPO_URL])
+        # Configure git identity
+        run(["git", "config", "user.name", GITHUB_USERNAME], cwd=repo_dir)
+        run(
+            ["git", "config", "user.email", f"{GITHUB_USERNAME}@users.noreply.github.com"],
+            cwd=repo_dir,
+        )
 
-        run(["git", "add", "published/"])
+        target_published_dir = repo_dir / "published"
+        target_published_dir.mkdir(parents=True, exist_ok=True)
 
-        diff_result = subprocess.run(["git", "diff", "--cached", "--quiet"], check=False)
+        # Remove old published files in clone
+        for item in target_published_dir.iterdir():
+            if item.is_file():
+                item.unlink()
+            elif item.is_dir():
+                shutil.rmtree(item)
+
+        # Copy fresh published files into clone
+        for item in LOCAL_PUBLISHED_DIR.iterdir():
+            src = item
+            dst = target_published_dir / item.name
+            if src.is_file():
+                shutil.copy2(src, dst)
+            elif src.is_dir():
+                shutil.copytree(src, dst)
+
+        # Commit only if there are changes
+        run(["git", "add", "published/"], cwd=repo_dir)
+
+        diff_result = subprocess.run(
+            ["git", "diff", "--cached", "--quiet"],
+            cwd=repo_dir,
+            check=False,
+        )
+
         if diff_result.returncode == 0:
             print("No published file changes to commit.")
             return
 
         commit_message = f"Update published reports {date.today().isoformat()}"
-        run(["git", "commit", "-m", commit_message])
-        run(["git", "push", "origin", "main"])
-    finally:
-        run(["git", "remote", "set-url", "origin", original_remote])
+        run(["git", "commit", "-m", commit_message], cwd=repo_dir)
+        run(["git", "push", "origin", "main"], cwd=repo_dir)
 
 
 if __name__ == "__main__":
