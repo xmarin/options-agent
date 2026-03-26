@@ -21,50 +21,14 @@ from config.settings import (
     FMP_API_KEY,
 )
 
+SKIP_DOWNTREND = os.getenv("SKIP_DOWNTREND", "true").lower() == "true"
+
 
 def load_tickers(path="data/tickers.csv", limit=500):
     """
-    Try to load a dynamic ticker universe from Cboe symbol data.
-    Fallback to local CSV if remote load fails.
+    Keep this simple and stable for now:
+    use your curated local universe.
     """
-    remote_sources = [
-        "https://www.cboe.com/us/options/market_statistics/symbol_data/csv/?mkt=cone",
-    ]
-
-    for url in remote_sources:
-        try:
-            df = pd.read_csv(url)
-            df.columns = [c.strip() for c in df.columns]
-
-            symbol_col = None
-            for candidate in ["Symbol", "symbol", "Underlying", "underlying"]:
-                if candidate in df.columns:
-                    symbol_col = candidate
-                    break
-
-            if symbol_col is None:
-                continue
-
-            symbols = (
-                df[symbol_col]
-                .dropna()
-                .astype(str)
-                .str.upper()
-                .str.strip()
-            )
-
-            symbols = symbols[
-                symbols.str.match(r"^[A-Z]{1,5}(\.[A-Z])?$", na=False)
-            ]
-
-            symbols = symbols.drop_duplicates().tolist()
-
-            if symbols:
-                return symbols[:limit]
-
-        except Exception:
-            pass
-
     df = pd.read_csv(path)
     return (
         df["ticker"]
@@ -182,14 +146,79 @@ def get_option_chain(ticker: str, expiration: str) -> list[dict]:
     return opt if isinstance(opt, list) else [opt]
 
 
+def get_price_history(ticker: str, lookback_days: int = 90) -> list[float]:
+    """
+    Uses Tradier daily history to derive simple trend metrics.
+    """
+    end_dt = date.today()
+    start_dt = end_dt - timedelta(days=lookback_days)
+
+    data = tradier_get(
+        "/markets/history",
+        {
+            "symbol": ticker,
+            "interval": "daily",
+            "start": start_dt.isoformat(),
+            "end": end_dt.isoformat(),
+        },
+    )
+
+    days = data.get("history", {}).get("day")
+    if not days:
+        return []
+
+    if isinstance(days, dict):
+        days = [days]
+
+    closes = []
+    for row in days:
+        close_val = safe_float(row.get("close"))
+        if close_val is not None:
+            closes.append(close_val)
+
+    return closes
+
+
+def get_trend_metrics(ticker: str) -> dict:
+    closes = get_price_history(ticker, lookback_days=120)
+
+    if len(closes) < 55:
+        return {
+            "SMA20": None,
+            "SMA50": None,
+            "20D Return": None,
+            "Trend": "unknown",
+            "Trend Score": 0.5,
+        }
+
+    sma20 = sum(closes[-20:]) / 20.0
+    sma50 = sum(closes[-50:]) / 50.0
+    ret20 = (closes[-1] / closes[-21]) - 1 if len(closes) >= 21 else None
+    spot = closes[-1]
+
+    if ret20 is not None and spot > sma20 and sma20 > sma50 and ret20 > 0:
+        trend = "up"
+        trend_score = 1.0
+    elif ret20 is not None and spot < sma20 and sma20 < sma50 and ret20 < 0:
+        trend = "down"
+        trend_score = 0.0
+    else:
+        trend = "neutral"
+        trend_score = 0.5
+
+    return {
+        "SMA20": round(sma20, 2),
+        "SMA50": round(sma50, 2),
+        "20D Return": round(ret20, 4) if ret20 is not None else None,
+        "Trend": trend,
+        "Trend Score": trend_score,
+    }
+
+
 # =========================
 # Earnings helpers
 # =========================
 def get_earnings_map(days_ahead=90):
-    """
-    Pull upcoming earnings once and return:
-    { ticker: next_earnings_date }
-    """
     if not FMP_API_KEY:
         return {}
 
@@ -287,6 +316,11 @@ def scan_one_ticker(ticker: str, earnings_map: dict) -> list[dict]:
     if not spot or spot <= 0:
         return []
 
+    trend = get_trend_metrics(ticker)
+
+    if SKIP_DOWNTREND and trend["Trend"] == "down":
+        return []
+
     earnings_date = earnings_map.get(ticker)
     days_to_earnings = days_until(earnings_date)
 
@@ -381,6 +415,10 @@ def scan_one_ticker(ticker: str, earnings_map: dict) -> list[dict]:
                 "Next Earnings Date": earnings_date,
                 "Days To Earnings": days_to_earnings,
                 "Earnings Risk": earnings_risk,
+                "SMA20": trend["SMA20"],
+                "SMA50": trend["SMA50"],
+                "20D Return": trend["20D Return"],
+                "Trend": trend["Trend"],
                 "Score": score,
             }
         )
@@ -423,13 +461,14 @@ def main():
 
     iv_component = df["IV Percentile (Scan)"].fillna(0) / 100.0
     base_component = df["Score"].fillna(0)
-    roc_component = df["Return on Capital"].fillna(0)
-    roc_component = roc_component.clip(upper=0.03) / 0.03
+    roc_component = df["Return on Capital"].fillna(0).clip(upper=0.03) / 0.03
+    trend_component = df["Trend"].map({"up": 1.0, "neutral": 0.5, "down": 0.0}).fillna(0.5)
 
     df["Final Score"] = (
-        base_component * 0.70 +
+        base_component * 0.60 +
         iv_component * 0.10 +
-        roc_component * 0.20
+        roc_component * 0.20 +
+        trend_component * 0.10
     ).round(4)
 
     df = df.sort_values(
@@ -450,10 +489,7 @@ def main():
 
     os.makedirs("published", exist_ok=True)
 
-    published_dated_out = os.path.join(
-        "published",
-        f"covered_call_report_{date.today().isoformat()}.csv"
-    )
+    published_dated_out = os.path.join("published", f"covered_call_report_{date.today().isoformat()}.csv")
     df.to_csv(published_dated_out, index=False)
 
     published_latest_out = os.path.join("published", "covered_call_report_latest.csv")
@@ -463,8 +499,8 @@ def main():
     print(f"Saved latest CSV: {latest_out}")
     print(f"Saved published CSV: {published_dated_out}")
     print(f"Saved published latest CSV: {published_latest_out}")
-    print("\nTop 20:")
-    print(df.head(20).to_string(index=False))
+    print("\nTop 10:")
+    print(df.head(10).to_string(index=False))
 
 
 if __name__ == "__main__":
