@@ -19,11 +19,10 @@ if not GITHUB_USERNAME or not GITHUB_TOKEN:
 REPO_URL = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/{GITHUB_REPO}.git"
 LOCAL_PUBLISHED_DIR = Path("published")
 
-
 def run(cmd, cwd=None):
-    print("Running:", " ".join(cmd))
+    printable = " ".join(cmd).replace(GITHUB_TOKEN, "***REDACTED***")
+    print("Running:", printable)
     subprocess.run(cmd, check=True, cwd=cwd)
-
 
 def main():
     if not LOCAL_PUBLISHED_DIR.exists():
