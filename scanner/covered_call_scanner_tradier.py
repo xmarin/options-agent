@@ -452,7 +452,7 @@ def main():
         print("  export MIN_BID=1.50")
         print("  export MAX_DELTA=0.35")
         print("  export MIN_OTM_PCT=0.02")
-        return
+        raise RuntimeError("Scanner produced no matches.")
 
     if "Current IV" in df.columns:
         df["IV Percentile (Scan)"] = (df["Current IV"].rank(pct=True) * 100).round(1)

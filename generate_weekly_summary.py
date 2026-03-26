@@ -70,7 +70,10 @@ Your tasks:
 4. Give a concise reason for the choice.
 5. Mention the biggest risk of that choice.
 
-Return STRICT JSON with this exact schema:
+Return ONLY valid JSON.
+Do not include markdown fences.
+Do not include commentary before or after the JSON.
+Use this exact schema:
 {{
   "report_date": "YYYY-MM-DD",
   "best_trade": {{
@@ -92,13 +95,22 @@ Top 10 candidates:
 {json.dumps(top10, indent=2)}
 """
 
-    response = client.responses.create(
-        model=OPENAI_MODEL,
-        input=prompt,
-    )
+   response = client.responses.create(
+    model=OPENAI_MODEL,
+    input=prompt,
+)
 
-    text = response.output_text.strip()
+text = (response.output_text or "").strip()
+
+if not text:
+    raise RuntimeError("OpenAI returned empty output.")
+
+try:
     summary = json.loads(text)
+except json.JSONDecodeError:
+    raw_path = PUBLISHED_DIR / f"weekly_summary_raw_{today_str}.txt"
+    raw_path.write_text(text, encoding="utf-8")
+    raise RuntimeError(f"OpenAI did not return valid JSON. Raw output saved to {raw_path}")
 
     dated_summary_path = PUBLISHED_DIR / f"weekly_summary_{today_str}.json"
     latest_summary_path = PUBLISHED_DIR / "weekly_summary_latest.json"
