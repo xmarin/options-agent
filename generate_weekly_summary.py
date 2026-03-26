@@ -9,7 +9,7 @@ from openai import OpenAI
 
 load_dotenv()
 
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 PUBLISHED_DIR = Path("published")
 LATEST_CSV = PUBLISHED_DIR / "covered_call_report_latest.csv"
 
@@ -38,7 +38,9 @@ def update_manifest():
 
     manifest = {
         "latest_report": "covered_call_report_latest.csv",
-        "latest_summary": "weekly_summary_latest.json" if (PUBLISHED_DIR / "weekly_summary_latest.json").exists() else None,
+        "latest_summary": "weekly_summary_latest.json"
+        if (PUBLISHED_DIR / "weekly_summary_latest.json").exists()
+        else None,
         "reports": reports,
     }
 
@@ -95,22 +97,24 @@ Top 10 candidates:
 {json.dumps(top10, indent=2)}
 """
 
-   response = client.responses.create(
-    model=OPENAI_MODEL,
-    input=prompt,
-)
+    response = client.responses.create(
+        model=OPENAI_MODEL,
+        input=prompt,
+    )
 
-text = (response.output_text or "").strip()
+    text = (response.output_text or "").strip()
 
-if not text:
-    raise RuntimeError("OpenAI returned empty output.")
+    if not text:
+        raise RuntimeError("OpenAI returned empty output.")
 
-try:
-    summary = json.loads(text)
-except json.JSONDecodeError:
-    raw_path = PUBLISHED_DIR / f"weekly_summary_raw_{today_str}.txt"
-    raw_path.write_text(text, encoding="utf-8")
-    raise RuntimeError(f"OpenAI did not return valid JSON. Raw output saved to {raw_path}")
+    try:
+        summary = json.loads(text)
+    except json.JSONDecodeError:
+        raw_path = PUBLISHED_DIR / f"weekly_summary_raw_{today_str}.txt"
+        raw_path.write_text(text, encoding="utf-8")
+        raise RuntimeError(
+            f"OpenAI did not return valid JSON. Raw output saved to {raw_path}"
+        )
 
     dated_summary_path = PUBLISHED_DIR / f"weekly_summary_{today_str}.json"
     latest_summary_path = PUBLISHED_DIR / "weekly_summary_latest.json"
