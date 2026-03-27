@@ -1,35 +1,15 @@
 {
-  "report_date": "2026-03-26",
+  "report_date": "2026-03-25",
   "best_trade": {
-    "ticker": "COIN",
-    "reason": "COIN offers the highest return on capital (1.78% weekly) and highest annual yield (92.58%) with a near-the-money strike and strong IV percentile (93.8), suggesting rich option premium for income. The stock shows neutral trend and no imminent earnings risk, providing a solid weekly covered call opportunity.",
-    "biggest_risk": "Cryptocurrency market volatility or unexpected company-specific events could cause large adverse price moves, leading to potential assignment or large losses."
+    "ticker": "GLD",
+    "reason": "GLD shows a strong annual yield of 43.66% from the weekly covered call with low earnings risk and moderate implied volatility at the 100th percentile, indicating a favorable premium environment. The call is slightly out-of-the-money with a low delta of 0.254, reducing the chance of assignment while providing solid income.",
+    "biggest_risk": "The main risk is a continued downtrend as the 20-day return is -12.07% and the stock is trading below its 20- and 50-day SMAs, which could lead to further price declines and premium erosion."
   },
-  "overall_summary": "This week's top candidates rank highly due to strong implied volatility, attractive premiums relative to capital required, and minimal earnings risk. Most selections are neutral trending stocks with stable premiums. However, lower volume names like DE and CRWD present liquidity risk. Others like MU and COIN benefit from high IV percentile signaling well-priced options for income generation.",
+  "overall_summary": "The top candidate list is highly concentrated on GLD with no earnings risk and excellent implied volatility conditions supporting rich premiums. However, the bearish price action and lack of open interest could impact liquidity and risk management. Overall, GLD presents an attractive covered call income opportunity despite a neutral to negative price trend.",
   "top_10_notes": [
     {
-      "ticker": "MU",
-      "comment": "High IV percentile and premium but recent price downtrend may add some risk; strong option volume."
-    },
-    {
-      "ticker": "COIN",
-      "comment": "Highest overall return with high IV percentile and no near-term earnings risk; volume supportive."
-    },
-    {
-      "ticker": "AMD",
-      "comment": "Low IV percentile and lower premium; strong liquidity but less attractive yield."
-    },
-    {
-      "ticker": "NET",
-      "comment": "Positive recent price momentum but very low volume and open interest pose liquidity concerns."
-    },
-    {
-      "ticker": "CRWD",
-      "comment": "Moderate premium but low liquidity and low IV percentile reduce attractiveness."
-    },
-    {
-      "ticker": "DE",
-      "comment": "Lowest return and volume is zero; low IV percentile and poor spread make it less desirable."
+      "ticker": "GLD",
+      "comment": "Ranked highest due to the highest implied volatility percentile, strong premium relative to capital, and no earnings risk. However, the underlying stock is trending down, which is a concern for capital preservation."
     }
   ]
 }
