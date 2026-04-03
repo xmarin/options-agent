@@ -14,7 +14,9 @@
       --accent: #6ea8fe;
       --good: #2fbf71;
       --bad: #ff5d5d;
+      --warn: #f0b429;
       --border: #24325f;
+      --tooltip-bg: #081225;
     }
 
     * { box-sizing: border-box; }
@@ -43,6 +45,7 @@
 
     h1 { margin: 0; font-size: 2rem; }
     h2 { margin: 0 0 12px 0; font-size: 1.2rem; }
+    h3 { margin: 16px 0 8px 0; font-size: 1rem; }
     .sub { margin-top: 8px; color: var(--muted); }
 
     .panel {
@@ -120,9 +123,19 @@
       border: 1px solid rgba(36, 50, 95, 0.6);
       border-radius: 12px;
       padding: 10px;
+      min-height: 76px;
     }
 
-    .label { color: var(--muted); font-size: 0.78rem; margin-bottom: 4px; }
+    .label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.2;
+    }
+
     .value { font-size: 1rem; font-weight: 700; line-height: 1.2; }
 
     .tag {
@@ -146,7 +159,96 @@
       color: var(--text);
     }
 
+    .methodology-list {
+      margin: 0;
+      padding-left: 18px;
+      line-height: 1.7;
+    }
+
+    .methodology-list li {
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .trade-history-box {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .small-note {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
     ul { margin: 8px 0 0 18px; }
+
+    .tooltip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11px;
+      cursor: help;
+      flex: 0 0 auto;
+    }
+
+    .tooltip .tooltip-text {
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 240px;
+      background: var(--tooltip-bg);
+      color: var(--text);
+      text-align: left;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      line-height: 1.45;
+      z-index: 1000;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+      pointer-events: none;
+    }
+
+    .tooltip:hover .tooltip-text {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .last-updated {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 6px;
+    }
+
+    .top10-notes ul {
+      margin-top: 8px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(110,168,254,0.12);
+      color: #9ec4ff;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-left: 6px;
+    }
   </style>
 </head>
 <body>
@@ -155,6 +257,7 @@
       <div>
         <h1>Options Agent Dashboard</h1>
         <div class="sub">Top 10 weekly covered-call candidates with AI summary and best trade.</div>
+        <div id="lastUpdated" class="last-updated">Loading latest report...</div>
       </div>
       <div class="toolbar">
         <label for="reportSelect">Report:</label>
@@ -171,17 +274,87 @@
     <div class="panel">
       <h2>AI Summary</h2>
       <div id="aiSummary" class="summary-box">Loading...</div>
-      <div id="top10Notes"></div>
+      <div id="top10Notes" class="top10-notes"></div>
     </div>
 
     <div class="panel">
       <h2>Top 10 Candidates</h2>
       <div id="top10Cards" class="cards"></div>
     </div>
+
+    <div class="panel">
+      <h2>Methodology</h2>
+      <ul class="methodology-list">
+        <li><strong>Capital Required</strong>: estimated stock capital needed to secure the covered call, generally stock price × 100 shares.</li>
+        <li><strong>Premium</strong>: option premium collected per contract in dollars.</li>
+        <li><strong>Weekly Income Estimate</strong>: expected premium dollars earned over the contract period.</li>
+        <li><strong>Return on Capital</strong>: premium divided by capital required.</li>
+        <li><strong>Annual Yield</strong>: weekly return annualized for comparison purposes. This is directional, not guaranteed.</li>
+        <li><strong>Delta</strong>: option sensitivity metric often used as a rough proxy for assignment likelihood.</li>
+        <li><strong>Assignment Proxy</strong>: practical assignment-risk proxy derived from the contract selection logic, currently close to delta.</li>
+        <li><strong>OTM</strong>: “out of the money” distance from current stock price to strike, shown as a percent.</li>
+        <li><strong>Spread</strong>: bid-ask spread as a liquidity quality indicator. Tighter is generally better.</li>
+        <li><strong>Volume / Open Interest</strong>: contract activity and existing position depth used as liquidity signals.</li>
+        <li><strong>Current IV</strong>: current implied volatility of the selected contract or underlying option context.</li>
+        <li><strong>IV Percentile (Scan)</strong>: relative ranking of implied volatility compared with the current scan universe.</li>
+        <li><strong>Earnings Risk</strong>: flags whether a company earnings event is expected before expiration.</li>
+        <li><strong>20D Return</strong>: trailing 20-day stock return.</li>
+        <li><strong>Trend</strong>: heuristic trend classification based on recent price behavior and moving-average context.</li>
+        <li><strong>Score / Final Score</strong>: ranking metrics from the scanner combining yield, IV, trend, risk, liquidity, and other selection factors.</li>
+      </ul>
+      <div class="small-note">
+        These metrics are designed to support candidate ranking, not to replace judgment. A high-ranked name can still be a poor trade if the underlying is weakening, liquidity is thin, or the risk-reward is unattractive for your objectives.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Trade History <span class="pill">Coming Next</span></h2>
+      <div id="tradeHistory" class="trade-history-box">
+        This section is reserved for comparing recommendations against actual covered calls you sold.
+        The next step is to load a structured trade-history dataset, likely exported from your existing call-tracking sheet, so the dashboard can compare:
+        <ul>
+          <li>recommended trade vs executed trade</li>
+          <li>expected premium vs collected premium</li>
+          <li>assignment outcomes</li>
+          <li>realized performance over time</li>
+        </ul>
+      </div>
+    </div>
   </div>
 
   <script>
     const MANIFEST_URL = `published/reports_manifest.json?t=${Date.now()}`;
+
+    const TOOLTIP_TEXT = {
+      stockPrice: "Current underlying stock price used by the scanner at evaluation time.",
+      capitalRequired: "Estimated stock capital needed to hold 100 shares for a covered call position.",
+      premium: "Option premium collected per contract in dollars.",
+      weeklyIncome: "Estimated premium income over the option period.",
+      returnOnCapital: "Premium divided by capital required. Helps compare yield efficiency across names.",
+      delta: "Option delta. Often used as a rough probability / assignment-risk proxy for covered call selection.",
+      assignmentProxy: "A practical assignment-likelihood proxy used by the scanner. Usually similar to delta.",
+      otm: "Out-of-the-money percent. Approximate distance from current stock price to strike.",
+      annualYield: "Weekly return annualized for comparability. Useful directionally, not a promise of repeatability.",
+      twentyDayReturn: "Trailing 20-day stock return to show recent momentum or weakness.",
+      trend: "Scanner trend classification derived from recent return and moving-average context.",
+      volume: "Option contract volume, used as a liquidity signal.",
+      openInterest: "Existing open contracts, used as a liquidity and tradability signal.",
+      ivPercentile: "Relative implied-volatility ranking versus the current scan universe.",
+      spread: "Bid-ask spread percentage. Lower is generally better.",
+      earningsRisk: "Shows whether earnings are expected before expiration.",
+      expiration: "Option expiration date for the selected contract.",
+      strikeBidAsk: "Selected strike and option bid/ask quote used in the recommendation."
+    };
+
+    function tooltip(label, key) {
+      const text = TOOLTIP_TEXT[key] || "";
+      return `
+        <span>${label}</span>
+        <span class="tooltip">i
+          <span class="tooltip-text">${text}</span>
+        </span>
+      `;
+    }
 
     function toNumber(value) {
       const n = Number(String(value).replace(/[%$]/g, "").trim());
@@ -270,7 +443,7 @@
       }
 
       notesEl.innerHTML = `
-        <h3 style="margin-top:16px;">AI Notes on Top 10</h3>
+        <h3>AI Notes on Top 10</h3>
         <ul>
           ${notes.map(note => `<li><strong>${note.ticker}</strong>: ${note.comment}</li>`).join("")}
         </ul>
@@ -302,24 +475,24 @@
           <div class="score">Final Score ${fmt(row["Final Score"], 2)}</div>
 
           <div class="stats">
-            <div class="stat"><div class="label">Stock Price</div><div class="value">$${fmt(row["Current Stock Price"], 2)}</div></div>
-            <div class="stat"><div class="label">Capital Needed</div><div class="value">$${fmt(row["Capital Required"], 0)}</div></div>
-            <div class="stat"><div class="label">Premium</div><div class="value">$${fmt(row["Premium"], 0)}</div></div>
-            <div class="stat"><div class="label">Weekly Income</div><div class="value">$${fmt(row["Weekly Income Estimate"], 0)}</div></div>
-            <div class="stat"><div class="label">Return on Capital</div><div class="value">${roc !== null ? (roc * 100).toFixed(2) + "%" : "—"}</div></div>
-            <div class="stat"><div class="label">Delta</div><div class="value">${fmt(row["Delta"], 2)}</div></div>
-            <div class="stat"><div class="label">Assignment Proxy</div><div class="value">${fmt(row["Assignment Proxy"], 2)}</div></div>
-            <div class="stat"><div class="label">OTM</div><div class="value">${otm !== null ? (otm * 100).toFixed(1) + "%" : "—"}</div></div>
-            <div class="stat"><div class="label">Annual Yield</div><div class="value">${annualYield !== null ? (annualYield * 100).toFixed(1) + "%" : "—"}</div></div>
-            <div class="stat"><div class="label">20D Return</div><div class="value">${ret20 !== null ? (ret20 * 100).toFixed(1) + "%" : "—"}</div></div>
-            <div class="stat"><div class="label">Trend</div><div class="value"><span class="tag ${trendClass}">${row["Trend"] || "—"}</span></div></div>
-            <div class="stat"><div class="label">Volume</div><div class="value">${fmtInt(row["Volume"])}</div></div>
-            <div class="stat"><div class="label">Open Interest</div><div class="value">${fmtInt(row["Open Interest"])}</div></div>
-            <div class="stat"><div class="label">IV Percentile</div><div class="value">${ivPct !== null ? ivPct.toFixed(0) + "%" : "—"}</div></div>
-            <div class="stat"><div class="label">Spread</div><div class="value">${spread !== null ? (spread * 100).toFixed(1) + "%" : "—"}</div></div>
-            <div class="stat"><div class="label">Earnings Risk</div><div class="value"><span class="tag ${riskClass}">${risk || "—"}</span></div></div>
-            <div class="stat"><div class="label">Expiration</div><div class="value">${row["Expiration"] || "—"}</div></div>
-            <div class="stat"><div class="label">Strike / Bid / Ask</div><div class="value">${fmt(row["Strike"], 2)} / ${fmt(row["Bid"], 2)} / ${fmt(row["Ask"], 2)}</div></div>
+            <div class="stat"><div class="label">${tooltip("Stock Price", "stockPrice")}</div><div class="value">$${fmt(row["Current Stock Price"], 2)}</div></div>
+            <div class="stat"><div class="label">${tooltip("Capital Needed", "capitalRequired")}</div><div class="value">$${fmt(row["Capital Required"], 0)}</div></div>
+            <div class="stat"><div class="label">${tooltip("Premium", "premium")}</div><div class="value">$${fmt(row["Premium"], 0)}</div></div>
+            <div class="stat"><div class="label">${tooltip("Weekly Income", "weeklyIncome")}</div><div class="value">$${fmt(row["Weekly Income Estimate"], 0)}</div></div>
+            <div class="stat"><div class="label">${tooltip("Return on Capital", "returnOnCapital")}</div><div class="value">${roc !== null ? (roc * 100).toFixed(2) + "%" : "—"}</div></div>
+            <div class="stat"><div class="label">${tooltip("Delta", "delta")}</div><div class="value">${fmt(row["Delta"], 2)}</div></div>
+            <div class="stat"><div class="label">${tooltip("Assignment Proxy", "assignmentProxy")}</div><div class="value">${fmt(row["Assignment Proxy"], 2)}</div></div>
+            <div class="stat"><div class="label">${tooltip("OTM", "otm")}</div><div class="value">${otm !== null ? (otm * 100).toFixed(1) + "%" : "—"}</div></div>
+            <div class="stat"><div class="label">${tooltip("Annual Yield", "annualYield")}</div><div class="value">${annualYield !== null ? (annualYield * 100).toFixed(1) + "%" : "—"}</div></div>
+            <div class="stat"><div class="label">${tooltip("20D Return", "twentyDayReturn")}</div><div class="value">${ret20 !== null ? (ret20 * 100).toFixed(1) + "%" : "—"}</div></div>
+            <div class="stat"><div class="label">${tooltip("Trend", "trend")}</div><div class="value"><span class="tag ${trendClass}">${row["Trend"] || "—"}</span></div></div>
+            <div class="stat"><div class="label">${tooltip("Volume", "volume")}</div><div class="value">${fmtInt(row["Volume"])}</div></div>
+            <div class="stat"><div class="label">${tooltip("Open Interest", "openInterest")}</div><div class="value">${fmtInt(row["Open Interest"])}</div></div>
+            <div class="stat"><div class="label">${tooltip("IV Percentile", "ivPercentile")}</div><div class="value">${ivPct !== null ? ivPct.toFixed(0) + "%" : "—"}</div></div>
+            <div class="stat"><div class="label">${tooltip("Spread", "spread")}</div><div class="value">${spread !== null ? (spread * 100).toFixed(1) + "%" : "—"}</div></div>
+            <div class="stat"><div class="label">${tooltip("Earnings Risk", "earningsRisk")}</div><div class="value"><span class="tag ${riskClass}">${risk || "—"}</span></div></div>
+            <div class="stat"><div class="label">${tooltip("Expiration", "expiration")}</div><div class="value">${row["Expiration"] || "—"}</div></div>
+            <div class="stat"><div class="label">${tooltip("Strike / Bid / Ask", "strikeBidAsk")}</div><div class="value">${fmt(row["Strike"], 2)} / ${fmt(row["Bid"], 2)} / ${fmt(row["Ask"], 2)}</div></div>
           </div>
         `;
         container.appendChild(card);
@@ -366,6 +539,9 @@
       renderCards(rows);
       renderBestTrade(summary);
       renderAISummary(summary);
+
+      const updated = document.getElementById("lastUpdated");
+      updated.textContent = `Viewing report date: ${selected.date}`;
     }
 
     async function init() {
