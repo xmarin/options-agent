@@ -1,0 +1,6 @@
+Stock,Transaction Date,Stock Price,Contract,Total Market Value,Call Expiration Date,DTE (days),Call Strike Price,Sold Price,Premium ($),% OTM (Out of the Money),"Return on Stock (period)
+",Report Date,Recommended Ticker,Recommended Strike Price,Recommended Expiration Date,Recommended Premium ($),Recommended Final Score,Best Trade of Week?,Ticker Match?,Strike Match?,Expiration Match?,Premium Variance ($),Buyback Price,Buyback Cost ($),Assigned?,Assignment Price,Expired Worthless?,Rolled?,Underlying Exit Price,Net Option P&L ($),Underlying P&L ($),Realized Total P&L ($),Close Date,Days Held,Annualized Actual Return,Notes
+NVDA,21-Jan-2026,$179.22,100,"$17,922.00",30-Jan-2026,9,$187.50,$1.73,$173.00,4.62%,0.97%,,,,,,,,,,,,,,,,,,,$173.00,,$173.00,,,,
+AMD,2-Feb-2026,$248.03,100,"$24,803.00",13-Feb-2026,11,$260.00,$7.95,$795.00,4.83%,3.21%,,,,,,,,,,,,,,,,,,,$795.00,,$795.00,,,,
+AMD,19-Feb-2026,$201.50,100,"$20,150.00",27-Feb-2026,8,$210.00,$3.75,$375.00,4.22%,1.86%,,,,,,,,,,,,,,,,,,,$375.00,,$375.00,,,,
+AMD,2-Mar-2026,$196.65,100,"$19,665.00",13-Mar-2026,11,$207.50,$3.55,$355.00,5.52%,1.81%,,,,,,,,,,,,,,,,,,,$355.00,,$355.00,,,,

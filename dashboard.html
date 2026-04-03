@@ -87,14 +87,40 @@
       gap: 14px;
     }
 
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .summary-tile {
+      background: rgba(24, 34, 64, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .summary-tile .k {
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-bottom: 6px;
+    }
+
+    .summary-tile .v {
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+
     @media (max-width: 1400px) {
       .cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 1150px) {
       .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
     @media (max-width: 820px) {
       .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .summary-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 560px) {
       .cards { grid-template-columns: 1fr; }
@@ -105,6 +131,26 @@
       border: 1px solid var(--border);
       border-radius: 18px;
       padding: 18px;
+    }
+
+    .trade-card {
+      background: rgba(24, 34, 64, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .trade-cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    @media (max-width: 1200px) {
+      .trade-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 700px) {
+      .trade-cards { grid-template-columns: 1fr; }
     }
 
     .rank { color: var(--muted); font-size: 0.85rem; }
@@ -152,6 +198,11 @@
     .up { background: rgba(47,191,113,0.12); color: #89e0af; }
     .neutral { background: rgba(110,168,254,0.12); color: #9ec4ff; }
     .down { background: rgba(255,93,93,0.12); color: #ff9b9b; }
+    .status-open { background: rgba(110,168,254,0.12); color: #9ec4ff; }
+    .status-assigned { background: rgba(255,93,93,0.12); color: #ff9b9b; }
+    .status-expired_worthless { background: rgba(47,191,113,0.12); color: #89e0af; }
+    .status-rolled { background: rgba(240,180,41,0.12); color: #ffd479; }
+    .status-closed { background: rgba(200,200,200,0.12); color: #d7deef; }
 
     .summary-box {
       white-space: pre-wrap;
@@ -168,15 +219,6 @@
     .methodology-list li {
       margin-bottom: 6px;
       color: var(--text);
-    }
-
-    .muted {
-      color: var(--muted);
-    }
-
-    .trade-history-box {
-      color: var(--muted);
-      line-height: 1.6;
     }
 
     .small-note {
@@ -249,6 +291,24 @@
       font-weight: 700;
       margin-left: 6px;
     }
+
+    .trade-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .trade-line {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.4;
+    }
+
+    .trade-line strong {
+      color: var(--text);
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -256,7 +316,7 @@
     <div class="hero">
       <div>
         <h1>Options Agent Dashboard</h1>
-        <div class="sub">Top 10 weekly covered-call candidates with AI summary and best trade.</div>
+        <div class="sub">Top 10 weekly covered-call candidates with AI summary, best trade, and trade-history review.</div>
         <div id="lastUpdated" class="last-updated">Loading latest report...</div>
       </div>
       <div class="toolbar">
@@ -283,15 +343,28 @@
     </div>
 
     <div class="panel">
+      <h2>Trade History Summary</h2>
+      <div id="tradeSummary" class="summary-grid"></div>
+      <div class="small-note">
+        These results come from your exported trade journal and are meant to compare recommendations against actual covered-call execution and outcomes.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Recent Trades</h2>
+      <div id="tradeCards" class="trade-cards"></div>
+    </div>
+
+    <div class="panel">
       <h2>Methodology</h2>
       <ul class="methodology-list">
         <li><strong>Capital Required</strong>: estimated stock capital needed to secure the covered call, generally stock price × 100 shares.</li>
         <li><strong>Premium</strong>: option premium collected per contract in dollars.</li>
-        <li><strong>Weekly Income Estimate</strong>: expected premium dollars earned over the contract period.</li>
+        <li><strong>Weekly Income Estimate</strong>: expected premium dollars earned over the option period.</li>
         <li><strong>Return on Capital</strong>: premium divided by capital required.</li>
         <li><strong>Annual Yield</strong>: weekly return annualized for comparison purposes. This is directional, not guaranteed.</li>
         <li><strong>Delta</strong>: option sensitivity metric often used as a rough proxy for assignment likelihood.</li>
-        <li><strong>Assignment Proxy</strong>: practical assignment-risk proxy derived from the contract selection logic, currently close to delta.</li>
+        <li><strong>Assignment Proxy</strong>: practical assignment-risk proxy derived from the scanner, currently close to delta.</li>
         <li><strong>OTM</strong>: “out of the money” distance from current stock price to strike, shown as a percent.</li>
         <li><strong>Spread</strong>: bid-ask spread as a liquidity quality indicator. Tighter is generally better.</li>
         <li><strong>Volume / Open Interest</strong>: contract activity and existing position depth used as liquidity signals.</li>
@@ -300,30 +373,18 @@
         <li><strong>Earnings Risk</strong>: flags whether a company earnings event is expected before expiration.</li>
         <li><strong>20D Return</strong>: trailing 20-day stock return.</li>
         <li><strong>Trend</strong>: heuristic trend classification based on recent price behavior and moving-average context.</li>
-        <li><strong>Score / Final Score</strong>: ranking metrics from the scanner combining yield, IV, trend, risk, liquidity, and other selection factors.</li>
+        <li><strong>Score / Final Score</strong>: ranking metrics from the scanner combining yield, IV, trend, risk, liquidity, and related factors.</li>
+        <li><strong>Trade History Metrics</strong>: summarize how recommendations compare against actual covered calls you executed and logged in your journal.</li>
       </ul>
       <div class="small-note">
-        These metrics are designed to support candidate ranking, not to replace judgment. A high-ranked name can still be a poor trade if the underlying is weakening, liquidity is thin, or the risk-reward is unattractive for your objectives.
-      </div>
-    </div>
-
-    <div class="panel">
-      <h2>Trade History <span class="pill">Coming Next</span></h2>
-      <div id="tradeHistory" class="trade-history-box">
-        This section is reserved for comparing recommendations against actual covered calls you sold.
-        The next step is to load a structured trade-history dataset, likely exported from your existing call-tracking sheet, so the dashboard can compare:
-        <ul>
-          <li>recommended trade vs executed trade</li>
-          <li>expected premium vs collected premium</li>
-          <li>assignment outcomes</li>
-          <li>realized performance over time</li>
-        </ul>
+        These metrics are decision-support inputs, not guarantees. A high-ranked candidate can still be a poor trade if the underlying weakens, liquidity deteriorates, or the reward-to-risk is unattractive for your goals.
       </div>
     </div>
   </div>
 
   <script>
     const MANIFEST_URL = `published/reports_manifest.json?t=${Date.now()}`;
+    const TRADE_HISTORY_URL = `published/trade_history.json?t=${Date.now()}`;
 
     const TOOLTIP_TEXT = {
       stockPrice: "Current underlying stock price used by the scanner at evaluation time.",
@@ -366,9 +427,19 @@
       return n === null ? "—" : n.toFixed(digits);
     }
 
+    function fmtMoney(value) {
+      const n = toNumber(value);
+      return n === null ? "—" : `$${n.toFixed(2)}`;
+    }
+
     function fmtInt(value) {
       const n = toNumber(value);
       return n === null ? "—" : Math.round(n).toLocaleString();
+    }
+
+    function fmtPctFraction(value, digits = 1) {
+      const n = toNumber(value);
+      return n === null ? "—" : `${(n * 100).toFixed(digits)}%`;
     }
 
     function parseCSV(text) {
@@ -499,9 +570,119 @@
       });
     }
 
+    function renderTradeSummary(payload) {
+      const container = document.getElementById("tradeSummary");
+
+      if (!payload || !payload.summary) {
+        container.innerHTML = `<div class="summary-tile"><div class="k">Trade History</div><div class="v">Not available</div></div>`;
+        return;
+      }
+
+      const s = payload.summary;
+      container.innerHTML = `
+        <div class="summary-tile">
+          <div class="k">Total Trades</div>
+          <div class="v">${fmtInt(s.total_trades)}</div>
+        </div>
+        <div class="summary-tile">
+          <div class="k">Open Trades</div>
+          <div class="v">${fmtInt(s.open_trades)}</div>
+        </div>
+        <div class="summary-tile">
+          <div class="k">Closed Trades</div>
+          <div class="v">${fmtInt(s.closed_trades)}</div>
+        </div>
+        <div class="summary-tile">
+          <div class="k">Assigned Count</div>
+          <div class="v">${fmtInt(s.assigned_count)}</div>
+        </div>
+        <div class="summary-tile">
+          <div class="k">Expired Worthless</div>
+          <div class="v">${fmtInt(s.expired_worthless_count)}</div>
+        </div>
+        <div class="summary-tile">
+          <div class="k">Rolled Count</div>
+          <div class="v">${fmtInt(s.rolled_count)}</div>
+        </div>
+        <div class="summary-tile">
+          <div class="k">Total Premium Collected</div>
+          <div class="v">${fmtMoney(s.total_premium_collected)}</div>
+        </div>
+        <div class="summary-tile">
+          <div class="k">Total Realized P&L</div>
+          <div class="v">${fmtMoney(s.total_realized_pnl)}</div>
+        </div>
+      `;
+    }
+
+    function renderTradeCards(payload) {
+      const container = document.getElementById("tradeCards");
+
+      if (!payload || !payload.records || !payload.records.length) {
+        container.innerHTML = `<div class="trade-card">No trade-history records found.</div>`;
+        return;
+      }
+
+      const records = [...payload.records]
+        .filter(r => r.stock)
+        .sort((a, b) => {
+          const da = a.transaction_date || "";
+          const db = b.transaction_date || "";
+          return db.localeCompare(da);
+        })
+        .slice(0, 9);
+
+      container.innerHTML = "";
+
+      records.forEach((r) => {
+        const statusClass = `status-${r.status || "open"}`;
+        const tickerMatch = r.ticker_match === true ? "yes" : r.ticker_match === false ? "no" : "—";
+        const strikeMatch = r.strike_match === true ? "yes" : r.strike_match === false ? "no" : "—";
+        const expirationMatch = r.expiration_match === true ? "yes" : r.expiration_match === false ? "no" : "—";
+
+        const card = document.createElement("div");
+        card.className = "trade-card";
+        card.innerHTML = `
+          <div class="rank">${r.transaction_date || "No transaction date"}</div>
+          <div class="ticker">${r.stock || "—"}</div>
+          <div class="score">
+            Status <span class="tag ${statusClass}">${r.status || "open"}</span>
+          </div>
+
+          <div class="trade-meta">
+            <div class="trade-line"><strong>Report Date:</strong> ${r.report_date || "—"}</div>
+            <div class="trade-line"><strong>Expiration:</strong> ${r.call_expiration_date || "—"}</div>
+            <div class="trade-line"><strong>Strike:</strong> ${fmt(r.call_strike_price, 2)}</div>
+            <div class="trade-line"><strong>Premium Collected:</strong> ${fmtMoney(r.actual_premium_collected ?? r.premium_dollars)}</div>
+            <div class="trade-line"><strong>Recommended Ticker:</strong> ${r.recommended_ticker || "—"}</div>
+            <div class="trade-line"><strong>Recommended Premium:</strong> ${fmtMoney(r.recommended_premium)}</div>
+            <div class="trade-line"><strong>Ticker Match:</strong> ${tickerMatch}</div>
+            <div class="trade-line"><strong>Strike Match:</strong> ${strikeMatch}</div>
+            <div class="trade-line"><strong>Expiration Match:</strong> ${expirationMatch}</div>
+            <div class="trade-line"><strong>Assigned:</strong> ${r.assigned === null ? "—" : (r.assigned ? "Yes" : "No")}</div>
+            <div class="trade-line"><strong>Expired Worthless:</strong> ${r.expired_worthless === null ? "—" : (r.expired_worthless ? "Yes" : "No")}</div>
+            <div class="trade-line"><strong>Rolled:</strong> ${r.rolled === null ? "—" : (r.rolled ? "Yes" : "No")}</div>
+            <div class="trade-line"><strong>Premium Variance:</strong> ${fmtMoney(r.premium_variance)}</div>
+            <div class="trade-line"><strong>Realized Total P&L:</strong> ${fmtMoney(r.realized_total_pnl)}</div>
+            <div class="trade-line"><strong>Days Held:</strong> ${fmtInt(r.days_held)}</div>
+            <div class="trade-line"><strong>Annualized Actual Return:</strong> ${fmtPctFraction(r.annualized_actual_return, 2)}</div>
+          </div>
+
+          <div class="small-note">${r.notes || ""}</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
     async function loadManifest() {
       const response = await fetch(MANIFEST_URL);
       if (!response.ok) throw new Error("Could not load reports_manifest.json");
+      return await response.json();
+    }
+
+    async function loadTradeHistory() {
+      const response = await fetch(TRADE_HISTORY_URL);
+      if (!response.ok) return null;
       return await response.json();
     }
 
@@ -547,6 +728,8 @@
     async function init() {
       try {
         const manifest = await loadManifest();
+        const tradeHistory = await loadTradeHistory();
+
         const select = document.getElementById("reportSelect");
         select.innerHTML = manifest.reports
           .map(r => `<option value="${r.date}">${r.date}</option>`)
@@ -554,6 +737,9 @@
 
         const defaultDate = manifest.reports[0]?.date;
         await renderSelectedReport(manifest, defaultDate);
+
+        renderTradeSummary(tradeHistory);
+        renderTradeCards(tradeHistory);
 
         select.addEventListener("change", async () => {
           await renderSelectedReport(manifest, select.value);
