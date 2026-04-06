@@ -2,30 +2,38 @@
   "report_date": "2026-04-06",
   "best_trade": {
     "ticker": "MU",
-    "reason": "MU ranks highest with a strong premium yield of 1.65% weekly return on capital combined with high IV percentile (79.2), good liquidity (high volume and open interest), no earnings risk this week, and a solid neutral price trend supporting option premium decay capture.",
-    "biggest_risk": "Price rally above the 400 strike causing assignment and limiting upside, though the trade is OTM and delta is low offering some downside protection."
+    "reason": "MU offers the highest return on capital (1.27%) and annual yield (1.1595) among the candidates, with high IV percentile (88.5%) maximizing premium. Its delta and OTM strike balance income and downside risk well. Strong volume and open interest support liquidity.",
+    "biggest_risk": "Despite no earnings risk, the neutral trend and OTM strike near SMA20/SMA50 resistance levels could lead to limited upside or downward pressure, risking assignment or limiting capital gains."
   },
-  "overall_summary": "This week's top candidates show strong premiums due to elevated implied volatility and near-term expirations. Most names show no immediate earnings risk, helping reduce unexpected volatility. MU stands out due to its liquidity, volatility profile, and premium return balance. Some other names have lower premiums or less volume, reducing attractiveness.",
+  "overall_summary": "This week, semiconductor and tech-related stocks dominate high-premium covered call candidates due to elevated IV and trading interest. Most names have no imminent earnings, reducing event risk. MU stands out for highest yield and liquidity, while others offer less income or have smaller premiums relative to capital. Caution is needed on stocks with lower scores or weaker trends.",
   "top_10_notes": [
     {
       "ticker": "MU",
-      "comment": "Highest return on capital, strong IV percentile, robust volume and open interest, no earnings risk, neutral trend."
-    },
-    {
-      "ticker": "COIN",
-      "comment": "Good premium but lower score due to down 20D return and less volume compared to MU; neutral trend and earnings well ahead mitigates risk."
-    },
-    {
-      "ticker": "AMD",
-      "comment": "Low IV percentile and moderate premium make it less attractive despite good volume and no earnings risk."
+      "comment": "Top-ranked for high return on capital, high IV percentile, strong volume and open interest, no earnings risk; neutral trend."
     },
     {
       "ticker": "UNH",
-      "comment": "Moderate premium with low volume and a looming earnings date in 15 days; trend slightly negative."
+      "comment": "Good yield and volume but moderate IV percentile and some downward pressure recently; earnings two weeks out but classified no risk."
     },
     {
       "ticker": "ASML",
-      "comment": "Very low volume and open interest, small weekly return on capital, and a wide bid-ask spread reduce desirability."
+      "comment": "Lower return and yield with low IV percentile; large capital required; neutral trend but less attractive premium."
+    },
+    {
+      "ticker": "CVNA",
+      "comment": "Moderate yield and volume but recent slight downtrend; mid-range IV percentile; no earnings risk."
+    },
+    {
+      "ticker": "AMAT",
+      "comment": "Improving trend and decent yield but lower IV percentile and volume; moderate premium spread could reduce execution quality."
+    },
+    {
+      "ticker": "LRCX",
+      "comment": "Healthy yield and volume but lower IV percentile and neutral trend; premium spread is relatively wide."
+    },
+    {
+      "ticker": "GS",
+      "comment": "Lowest yield with very low IV percentile; earnings risk low but coming soon; moderate volume but lower return on capital overall."
     }
   ]
 }
