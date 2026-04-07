@@ -175,7 +175,20 @@
       line-height: 1.2;
     }
 
-    .value { font-size: 1rem; font-weight: 700; line-height: 1.2; }
+    .value {
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .value-small {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--muted);
+      line-height: 1.35;
+      word-break: break-all;
+    }
 
     .order-lines {
       display: grid;
@@ -189,6 +202,7 @@
       border: 1px solid rgba(36, 50, 95, 0.45);
       font-size: 0.93rem;
       line-height: 1.35;
+      word-break: break-word;
     }
 
     .order-line strong {
@@ -353,19 +367,21 @@
     <div class="panel">
       <h2>Methodology</h2>
       <ul class="methodology-list">
-        <li><strong>Stock Info</strong>: summarizes the underlying name, capital needed, trend context, and earnings event risk.</li>
-        <li><strong>Call Setup</strong>: shows the practical order ticket you would enter for a single covered-call contract.</li>
+        <li><strong>Covered Call Action</strong>: the dashboard shows the exact call contract to <strong>sell to open</strong>, not buy.</li>
+        <li><strong>Scanned Stock Price</strong>: the underlying stock price captured when the report was generated.</li>
+        <li><strong>Live Stock Price</strong>: the current underlying quote pulled during live overlay generation.</li>
         <li><strong>Scanned Premium</strong>: based on the option quote captured when the report was generated.</li>
-        <li><strong>Live Overlay</strong>: compares current option bid/ask with the scanned bid/ask to flag stale setups.</li>
+        <li><strong>Live Overlay</strong>: compares current option bid/ask with the scanned bid/ask for the same contract.</li>
+        <li><strong>Option Symbol</strong>: the exact OCC-style option symbol so you can find the same contract in your broker.</li>
         <li><strong>Suggested Limit</strong>: midpoint-based execution hint using current live bid/ask when available.</li>
         <li><strong>Return on Capital</strong>: premium divided by capital required.</li>
         <li><strong>Delta / Assignment Proxy</strong>: rough assignment-likelihood indicators, not guarantees.</li>
-        <li><strong>OTM</strong>: percentage distance between current stock price and strike.</li>
+        <li><strong>OTM</strong>: percentage distance between scanned stock price and strike.</li>
         <li><strong>Annual Yield</strong>: weekly return annualized for comparison only.</li>
         <li><strong>Spread / Volume / Open Interest</strong>: liquidity quality inputs.</li>
       </ul>
       <div class="small-note">
-        A recommendation is only useful if it is still executable at decision time. Use the live overlay to avoid acting on stale premiums.
+        A recommendation is only useful if it is still executable at decision time. Verify the exact option symbol, strike, and expiration before placing the sell-to-open order.
       </div>
     </div>
   </div>
@@ -375,7 +391,9 @@
     const LIVE_OVERLAY_URL = `published/live_overlay.json?t=${Date.now()}`;
 
     const TOOLTIP_TEXT = {
-      stockPrice: "Current underlying stock price captured at scan time.",
+      scannedStockPrice: "Underlying stock price captured when the scanner generated the report.",
+      liveStockPrice: "Underlying stock price pulled later during live overlay generation.",
+      stockDrift: "Percentage difference between live stock price and scanned stock price.",
       capitalRequired: "Approximate stock capital needed for 100 shares in a covered-call position.",
       trend: "Scanner trend classification from recent return and moving-average context.",
       earningsRisk: "Whether earnings are expected before the option expires.",
@@ -383,12 +401,13 @@
       roi: "Premium divided by capital required.",
       delta: "Option delta, often used as a rough proxy for assignment likelihood.",
       assignmentProxy: "Scanner-specific assignment likelihood proxy, generally close to delta.",
-      otm: "Out-of-the-money distance between stock price and strike.",
+      otm: "Out-of-the-money distance between scanned stock price and strike.",
       annualYield: "Weekly return annualized for comparability.",
       spread: "Bid-ask spread percentage. Lower is usually better.",
       volume: "Option contract volume.",
       openInterest: "Existing open contracts at that strike/expiration.",
-      ivPercentile: "Implied-volatility percentile versus the scan universe."
+      ivPercentile: "Implied-volatility percentile versus the scan universe.",
+      optionSymbol: "Exact option contract identifier. Use this to find the same call in your broker."
     };
 
     function tooltip(label, key) {
@@ -402,7 +421,7 @@
     }
 
     function toNumber(value) {
-      const n = Number(String(value).replace(/[%$]/g, "").trim());
+      const n = Number(String(value).replace(/[%$,]/g, "").trim());
       return Number.isFinite(n) ? n : null;
     }
 
@@ -502,16 +521,47 @@
       `;
     }
 
-    function overlayMap(payload) {
+    function buildOverlayMap(payload) {
       const map = new Map();
       if (!payload || !payload.records) return map;
-      payload.records.forEach(r => map.set(String(r.ticker).toUpperCase(), r));
+
+      payload.records.forEach(record => {
+        const optionSymbol = String(record.option_symbol || "").trim().toUpperCase();
+        if (optionSymbol) {
+          map.set(optionSymbol, record);
+        }
+      });
+
       return map;
+    }
+
+    function optionSymbolFromRow(row) {
+      const raw = row["Option Symbol"];
+      if (raw && String(raw).trim()) {
+        return String(raw).trim().toUpperCase();
+      }
+
+      const ticker = String(row["Ticker"] || "").trim().toUpperCase();
+      const expiration = String(row["Expiration"] || "").trim();
+      const strike = toNumber(row["Strike"]);
+
+      if (!ticker || !expiration || strike === null) return "";
+
+      const d = new Date(expiration);
+      if (Number.isNaN(d.getTime())) return "";
+
+      const yy = String(d.getUTCFullYear()).slice(-2);
+      const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+      const dd = String(d.getUTCDate()).padStart(2, "0");
+      const strikeInt = Math.round(strike * 1000);
+      const strikeFormatted = String(strikeInt).padStart(8, "0");
+
+      return `${ticker}${yy}${mm}${dd}C${strikeFormatted}`;
     }
 
     function buildLiveBox(overlay) {
       if (!overlay) {
-        return `<div class="warn-box warn">Live overlay not available yet for this contract.</div>`;
+        return `<div class="warn-box warn">Live overlay not available yet for this exact contract.</div>`;
       }
 
       if (overlay.error) {
@@ -521,6 +571,7 @@
       const liveBid = overlay.live_bid;
       const liveAsk = overlay.live_ask;
       const scannedBid = overlay.scanned_bid;
+      const scannedAsk = overlay.scanned_ask;
       const changePct = overlay.premium_change_pct_from_bid;
 
       let cls = "good";
@@ -532,7 +583,7 @@
 
       let message = `
         <strong>${status}:</strong>
-        Scanned bid/ask ${fmt(scannedBid, 2)} / ${fmt(overlay.scanned_ask, 2)}
+        Scanned bid/ask ${fmt(scannedBid, 2)} / ${fmt(scannedAsk, 2)}
         → Live bid/ask ${fmt(liveBid, 2)} / ${fmt(liveAsk, 2)}
       `;
 
@@ -545,13 +596,18 @@
         message += `<br><strong>Suggested live limit:</strong> around ${suggested}`;
       }
 
+      if (overlay.generated_at) {
+        message += `<br><strong>Overlay timestamp:</strong> ${overlay.generated_at}`;
+      }
+
       return `<div class="warn-box ${cls}">${message}</div>`;
     }
 
     function renderCards(rows, livePayload) {
       const container = document.getElementById("top10Cards");
       container.innerHTML = "";
-      const liveByTicker = overlayMap(livePayload);
+
+      const liveByOptionSymbol = buildOverlayMap(livePayload);
 
       rows.slice(0, 10).forEach((row, idx) => {
         const ticker = String(row["Ticker"] || "").trim().toUpperCase();
@@ -560,17 +616,22 @@
         const trend = String(row["Trend"] || "").trim().toLowerCase();
         const trendClass = ["up", "neutral", "down"].includes(trend) ? trend : "neutral";
 
-        const overlay = liveByTicker.get(ticker);
-
         const expirationText = row["Expiration"] || "—";
         const strike = fmt(row["Strike"], 2);
         const scannedBid = fmt(row["Bid"], 2);
         const scannedAsk = fmt(row["Ask"], 2);
 
+        const optionSymbol = optionSymbolFromRow(row);
+        const overlay = liveByOptionSymbol.get(optionSymbol);
+
         let liveLimitText = `around ${scannedBid}`;
         if (overlay && overlay.live_bid !== null && overlay.live_ask !== null) {
           liveLimitText = `around ${((overlay.live_bid + overlay.live_ask) / 2).toFixed(2)}`;
         }
+
+        const scannedStockPrice = overlay?.scanned_stock_price ?? row["Current Stock Price"];
+        const liveStockPrice = overlay?.live_stock_price;
+        const stockDrift = overlay?.stock_price_change_pct;
 
         const card = document.createElement("div");
         card.className = "stock-card";
@@ -582,24 +643,46 @@
           <div class="section-box">
             <h3>1. Stock Info</h3>
             <div class="stats">
-              <div class="stat"><div class="label">${tooltip("Stock Price", "stockPrice")}</div><div class="value">${fmtMoney(row["Current Stock Price"], 2)}</div></div>
-              <div class="stat"><div class="label">${tooltip("Capital Needed", "capitalRequired")}</div><div class="value">${fmtMoney(row["Capital Required"], 0)}</div></div>
-              <div class="stat"><div class="label">${tooltip("Trend", "trend")}</div><div class="value"><span class="tag ${trendClass}">${row["Trend"] || "—"}</span></div></div>
-              <div class="stat"><div class="label">${tooltip("Earnings Risk", "earningsRisk")}</div><div class="value"><span class="tag ${riskClass}">${risk || "—"}</span></div></div>
+              <div class="stat">
+                <div class="label">${tooltip("Scanned Stock Price", "scannedStockPrice")}</div>
+                <div class="value">${fmtMoney(scannedStockPrice, 2)}</div>
+              </div>
+              <div class="stat">
+                <div class="label">${tooltip("Live Stock Price", "liveStockPrice")}</div>
+                <div class="value">${fmtMoney(liveStockPrice, 2)}</div>
+              </div>
+              <div class="stat">
+                <div class="label">${tooltip("Stock Drift", "stockDrift")}</div>
+                <div class="value">${fmtPctFraction(stockDrift, 2)}</div>
+              </div>
+              <div class="stat">
+                <div class="label">${tooltip("Capital Needed", "capitalRequired")}</div>
+                <div class="value">${fmtMoney(row["Capital Required"], 0)}</div>
+              </div>
+              <div class="stat">
+                <div class="label">${tooltip("Trend", "trend")}</div>
+                <div class="value"><span class="tag ${trendClass}">${row["Trend"] || "—"}</span></div>
+              </div>
+              <div class="stat">
+                <div class="label">${tooltip("Earnings Risk", "earningsRisk")}</div>
+                <div class="value"><span class="tag ${riskClass}">${risk || "—"}</span></div>
+              </div>
             </div>
           </div>
 
           <div class="section-box">
-            <h3>2. Call Setup</h3>
+            <h3>2. Exact Call To Sell</h3>
             <div class="order-lines">
               <div class="order-line"><strong>Action:</strong> Sell to Open</div>
               <div class="order-line"><strong>Contracts:</strong> 1</div>
               <div class="order-line"><strong>Underlying:</strong> ${ticker}</div>
               <div class="order-line"><strong>Expiration:</strong> ${expirationText}</div>
               <div class="order-line"><strong>Strike:</strong> ${strike}</div>
+              <div class="order-line"><strong>Type:</strong> Call</div>
               <div class="order-line"><strong>Order Type:</strong> Limit</div>
+              <div class="order-line"><strong>Exact Option Symbol:</strong> ${optionSymbol || "—"}</div>
               <div class="order-line"><strong>Scanned Bid / Ask:</strong> ${scannedBid} / ${scannedAsk}</div>
-              <div class="order-line"><strong>Suggested Limit:</strong> ${liveLimitText}</div>
+              <div class="order-line"><strong>Suggested Live Limit:</strong> ${liveLimitText}</div>
             </div>
             ${buildLiveBox(overlay)}
           </div>
@@ -617,6 +700,10 @@
               <div class="stat"><div class="label">${tooltip("Volume", "volume")}</div><div class="value">${fmtInt(row["Volume"])}</div></div>
               <div class="stat"><div class="label">${tooltip("Open Interest", "openInterest")}</div><div class="value">${fmtInt(row["Open Interest"])}</div></div>
               <div class="stat"><div class="label">${tooltip("IV Percentile", "ivPercentile")}</div><div class="value">${fmt(row["IV Percentile (Scan)"], 0)}%</div></div>
+              <div class="stat">
+                <div class="label">${tooltip("Option Symbol", "optionSymbol")}</div>
+                <div class="value-small">${optionSymbol || "—"}</div>
+              </div>
             </div>
           </div>
         `;
@@ -671,7 +758,8 @@
       renderBestTrade(summary);
       renderAISummary(summary);
 
-      document.getElementById("lastUpdated").textContent = `Viewing report date: ${selected.date}`;
+      const overlayTs = liveOverlay?.generated_at ? ` | Live overlay: ${liveOverlay.generated_at}` : "";
+      document.getElementById("lastUpdated").textContent = `Viewing report date: ${selected.date}${overlayTs}`;
     }
 
     async function init() {

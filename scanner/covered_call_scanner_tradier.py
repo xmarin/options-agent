@@ -25,10 +25,6 @@ SKIP_DOWNTREND = os.getenv("SKIP_DOWNTREND", "true").lower() == "true"
 
 
 def load_tickers(path="data/tickers.csv", limit=500):
-    """
-    Keep this simple and stable for now:
-    use your curated local universe.
-    """
     df = pd.read_csv(path)
     return (
         df["ticker"]
@@ -41,9 +37,6 @@ def load_tickers(path="data/tickers.csv", limit=500):
     )
 
 
-# =========================
-# Helpers
-# =========================
 def tradier_get(path: str, params: dict) -> dict:
     if not TRADIER_TOKEN:
         raise RuntimeError(
@@ -66,6 +59,8 @@ def tradier_get(path: str, params: dict) -> dict:
 
 def safe_float(x):
     try:
+        if x is None:
+            return None
         return float(x)
     except Exception:
         return None
@@ -86,6 +81,19 @@ def dte(expiration: str) -> int:
     return (parse_date(expiration) - date.today()).days
 
 
+def build_occ_option_symbol(ticker: str, expiration: str, option_type: str, strike: float) -> str:
+    """
+    Example:
+    AMD 2026-04-10 C 230 -> AMD260410C00230000
+    """
+    ticker = str(ticker).strip().upper()
+    exp_part = pd.to_datetime(expiration).strftime("%y%m%d")
+    strike_int = int(round(float(strike) * 1000))
+    strike_part = f"{strike_int:08d}"
+    opt_type = str(option_type).strip().upper()
+    return f"{ticker}{exp_part}{opt_type}{strike_part}"
+
+
 def get_last_price(ticker: str) -> float | None:
     data = tradier_get("/markets/quotes", {"symbols": ticker, "greeks": "false"})
     q = data.get("quotes", {}).get("quote")
@@ -96,7 +104,13 @@ def get_last_price(ticker: str) -> float | None:
     if isinstance(q, list):
         q = q[0]
 
-    return safe_float(q.get("last"))
+    # Prefer last, then close, then previous_close
+    for field in ["last", "close", "prevclose"]:
+        val = safe_float(q.get(field))
+        if val is not None and val > 0:
+            return val
+
+    return None
 
 
 def get_expirations(ticker: str) -> list[str]:
@@ -147,9 +161,6 @@ def get_option_chain(ticker: str, expiration: str) -> list[dict]:
 
 
 def get_price_history(ticker: str, lookback_days: int = 90) -> list[float]:
-    """
-    Uses Tradier daily history to derive simple trend metrics.
-    """
     end_dt = date.today()
     start_dt = end_dt - timedelta(days=lookback_days)
 
@@ -215,9 +226,6 @@ def get_trend_metrics(ticker: str) -> dict:
     }
 
 
-# =========================
-# Earnings helpers
-# =========================
 def get_earnings_map(days_ahead=90):
     if not FMP_API_KEY:
         return {}
@@ -270,9 +278,6 @@ def days_until(date_str: str | None) -> int | None:
         return None
 
 
-# =========================
-# Ranking logic
-# =========================
 def calculate_score(
     premium: float,
     delta: float,
@@ -308,9 +313,6 @@ def calculate_score(
     return round(score, 4)
 
 
-# =========================
-# Core scan logic
-# =========================
 def scan_one_ticker(ticker: str, earnings_map: dict) -> list[dict]:
     spot = get_last_price(ticker)
     if not spot or spot <= 0:
@@ -391,13 +393,24 @@ def scan_one_ticker(ticker: str, earnings_map: dict) -> list[dict]:
             open_interest=open_interest,
         )
 
+        option_symbol = build_occ_option_symbol(
+            ticker=ticker,
+            expiration=exp,
+            option_type="C",
+            strike=strike,
+        )
+
         results.append(
             {
                 "Ticker": ticker,
                 "Current Stock Price": round(spot, 2),
+                "Expiration": exp,
+                "DTE": days,
+                "Strike": round(strike, 2),
+                "Option Type": "CALL",
+                "Option Symbol": option_symbol,
                 "Bid": round(bid, 2),
                 "Ask": round(ask, 2),
-                "Strike": round(strike, 2),
                 "Delta": round(delta, 3),
                 "OTM": round(otm_pct, 4),
                 "Premium": round(premium, 2),
@@ -406,8 +419,6 @@ def scan_one_ticker(ticker: str, earnings_map: dict) -> list[dict]:
                 "Assignment Proxy": round(assignment_proxy, 3),
                 "Weekly Income Estimate": round(weekly_income_estimate, 2),
                 "Annual Yield": round(annual_yield, 4) if annual_yield is not None else None,
-                "Expiration": exp,
-                "DTE": days,
                 "Spread%": round(spread_pct, 4) if spread_pct is not None else None,
                 "Volume": volume,
                 "Open Interest": open_interest,
@@ -476,7 +487,6 @@ def main():
         ascending=[False, False, False, False, False],
     )
 
-    # Keep only the best contract per stock
     df = df.drop_duplicates(subset=["Ticker"], keep="first")
 
     os.makedirs("reports", exist_ok=True)
