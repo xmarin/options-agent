@@ -1,9 +1,10 @@
 import os
 import sys
 import time
-import requests
-import pandas as pd
 from datetime import date, datetime, timedelta
+
+import pandas as pd
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -22,6 +23,54 @@ from config.settings import (
 )
 
 SKIP_DOWNTREND = os.getenv("SKIP_DOWNTREND", "true").lower() == "true"
+CC_STRATEGY_MODE = os.getenv("CC_STRATEGY_MODE", "balanced").strip().lower()
+
+# Supported modes:
+#   income       -> favor richer premium / slightly closer strikes
+#   balanced     -> default, trader-friendly middle ground
+#   conservative -> favor lower assignment risk / farther OTM
+STRATEGY_TARGETS = {
+    "income": {
+        "target_delta": 0.38,
+        "target_otm": 0.025,
+        "premium_weight": 0.30,
+        "delta_weight": 0.24,
+        "otm_weight": 0.10,
+        "liquidity_weight": 0.16,
+        "earnings_weight": 0.12,
+        "roc_weight": 0.20,
+        "iv_weight": 0.08,
+        "trend_weight": 0.10,
+    },
+    "balanced": {
+        "target_delta": 0.30,
+        "target_otm": 0.045,
+        "premium_weight": 0.26,
+        "delta_weight": 0.26,
+        "otm_weight": 0.12,
+        "liquidity_weight": 0.16,
+        "earnings_weight": 0.12,
+        "roc_weight": 0.18,
+        "iv_weight": 0.08,
+        "trend_weight": 0.10,
+    },
+    "conservative": {
+        "target_delta": 0.22,
+        "target_otm": 0.065,
+        "premium_weight": 0.20,
+        "delta_weight": 0.28,
+        "otm_weight": 0.16,
+        "liquidity_weight": 0.16,
+        "earnings_weight": 0.12,
+        "roc_weight": 0.16,
+        "iv_weight": 0.08,
+        "trend_weight": 0.12,
+    },
+}
+
+
+def get_strategy_config() -> dict:
+    return STRATEGY_TARGETS.get(CC_STRATEGY_MODE, STRATEGY_TARGETS["balanced"])
 
 
 def load_tickers(path="data/tickers.csv", limit=500):
@@ -104,7 +153,6 @@ def get_last_price(ticker: str) -> float | None:
     if isinstance(q, list):
         q = q[0]
 
-    # Prefer last, then close, then previous_close
     for field in ["last", "close", "prevclose"]:
         val = safe_float(q.get(field))
         if val is not None and val > 0:
@@ -278,6 +326,16 @@ def days_until(date_str: str | None) -> int | None:
         return None
 
 
+def clamp(value: float, min_value: float = 0.0, max_value: float = 1.0) -> float:
+    return max(min_value, min(value, max_value))
+
+
+def closeness_score(value: float, target: float, tolerance: float) -> float:
+    if tolerance <= 0:
+        return 1.0 if value == target else 0.0
+    return clamp(1.0 - (abs(value - target) / tolerance))
+
+
 def calculate_score(
     premium: float,
     delta: float,
@@ -286,31 +344,54 @@ def calculate_score(
     earnings_risk: str,
     volume: int,
     open_interest: int,
+    return_on_capital: float | None,
 ):
-    premium_score = min(premium / 1000.0, 1.0)
-    delta_score = max(0.0, 1.0 - delta)
-    otm_score = min(otm_pct / 0.15, 1.0)
+    cfg = get_strategy_config()
+
+    # Better premium scaling for weeklies.
+    # Most realistic bids for this scanner are usually in the $1-$15 range.
+    premium_score = clamp((premium - 100.0) / 900.0)
+
+    # Reward contracts near the target delta instead of blindly preferring lower delta.
+    delta_score = closeness_score(delta, cfg["target_delta"], tolerance=0.14)
+
+    # Reward contracts near a target OTM band instead of always pushing farther OTM.
+    otm_score = closeness_score(otm_pct, cfg["target_otm"], tolerance=0.05)
 
     if spread_pct is None:
         spread_score = 0.0
     else:
-        spread_score = max(0.0, 1.0 - min(spread_pct / 0.25, 1.0))
+        # Spreads under ~8% are excellent, 15%+ fade quickly.
+        spread_score = clamp(1.0 - (spread_pct / 0.15))
 
-    volume_score = min(volume / 1000.0, 1.0)
-    oi_score = min(open_interest / 5000.0, 1.0)
+    volume_score = clamp(volume / 1500.0)
+    oi_score = clamp(open_interest / 6000.0)
+    liquidity_score = (spread_score * 0.50) + (volume_score * 0.25) + (oi_score * 0.25)
 
-    liquidity_score = (spread_score * 0.4) + (volume_score * 0.3) + (oi_score * 0.3)
     earnings_score = 0.0 if earnings_risk == "YES" else 1.0
 
+    roc_value = return_on_capital if return_on_capital is not None else 0.0
+    roc_score = clamp(roc_value / 0.03)
+
     score = (
-        premium_score * 0.30 +
-        otm_score * 0.18 +
-        liquidity_score * 0.22 +
-        delta_score * 0.15 +
-        earnings_score * 0.15
+        premium_score * cfg["premium_weight"]
+        + delta_score * cfg["delta_weight"]
+        + otm_score * cfg["otm_weight"]
+        + liquidity_score * cfg["liquidity_weight"]
+        + earnings_score * cfg["earnings_weight"]
+        + roc_score * cfg["roc_weight"]
     )
 
-    return round(score, 4)
+    component_scores = {
+        "Premium Score": round(premium_score, 4),
+        "Delta Score": round(delta_score, 4),
+        "OTM Score": round(otm_score, 4),
+        "Liquidity Score": round(liquidity_score, 4),
+        "Earnings Score": round(earnings_score, 4),
+        "ROC Score": round(roc_score, 4),
+    }
+
+    return round(score, 4), component_scores
 
 
 def scan_one_ticker(ticker: str, earnings_map: dict) -> list[dict]:
@@ -383,7 +464,7 @@ def scan_one_ticker(ticker: str, earnings_map: dict) -> list[dict]:
             except Exception:
                 earnings_risk = "NO"
 
-        score = calculate_score(
+        score, component_scores = calculate_score(
             premium=premium,
             delta=delta,
             otm_pct=otm_pct,
@@ -391,6 +472,7 @@ def scan_one_ticker(ticker: str, earnings_map: dict) -> list[dict]:
             earnings_risk=earnings_risk,
             volume=volume,
             open_interest=open_interest,
+            return_on_capital=return_on_capital,
         )
 
         option_symbol = build_occ_option_symbol(
@@ -430,6 +512,15 @@ def scan_one_ticker(ticker: str, earnings_map: dict) -> list[dict]:
                 "SMA50": trend["SMA50"],
                 "20D Return": trend["20D Return"],
                 "Trend": trend["Trend"],
+                "Strategy Mode": CC_STRATEGY_MODE,
+                "Target Delta": round(get_strategy_config()["target_delta"], 3),
+                "Target OTM": round(get_strategy_config()["target_otm"], 4),
+                "Premium Score": component_scores["Premium Score"],
+                "Delta Score": component_scores["Delta Score"],
+                "OTM Score": component_scores["OTM Score"],
+                "Liquidity Score": component_scores["Liquidity Score"],
+                "Earnings Score": component_scores["Earnings Score"],
+                "ROC Score": component_scores["ROC Score"],
                 "Score": score,
             }
         )
@@ -443,6 +534,7 @@ def main():
     if len(sys.argv) > 1:
         tickers = [t.strip().upper() for t in sys.argv[1].split(",") if t.strip()]
 
+    print(f"Strategy mode: {CC_STRATEGY_MODE}")
     print("Loading earnings calendar...")
     earnings_map = get_earnings_map(days_ahead=90)
     print(f"Earnings entries loaded: {len(earnings_map)}")
@@ -461,8 +553,8 @@ def main():
         print("\nNo matches found. Loosen filters or scan more tickers.")
         print("Suggested loosening examples:")
         print("  export MIN_BID=1.50")
-        print("  export MAX_DELTA=0.35")
-        print("  export MIN_OTM_PCT=0.02")
+        print("  export MAX_DELTA=0.40")
+        print("  export MIN_OTM_PCT=0.01")
         raise RuntimeError("Scanner produced no matches.")
 
     if "Current IV" in df.columns:
@@ -470,39 +562,34 @@ def main():
     else:
         df["IV Percentile (Scan)"] = None
 
+    cfg = get_strategy_config()
     iv_component = df["IV Percentile (Scan)"].fillna(0) / 100.0
     base_component = df["Score"].fillna(0)
-    roc_component = df["Return on Capital"].fillna(0).clip(upper=0.03) / 0.03
     trend_component = df["Trend"].map({"up": 1.0, "neutral": 0.5, "down": 0.0}).fillna(0.5)
 
     df["Final Score"] = (
-        base_component * 0.60 +
-        iv_component * 0.10 +
-        roc_component * 0.20 +
-        trend_component * 0.10
+        base_component * (1.0 - cfg["iv_weight"] - cfg["trend_weight"])
+        + iv_component * cfg["iv_weight"]
+        + trend_component * cfg["trend_weight"]
     ).round(4)
 
     df = df.sort_values(
-        ["Final Score", "Premium", "Annual Yield", "Open Interest", "Volume"],
-        ascending=[False, False, False, False, False],
+        ["Final Score", "Premium Score", "Delta Score", "Liquidity Score", "Premium", "Open Interest", "Volume"],
+        ascending=[False, False, False, False, False, False, False],
     )
 
     df = df.drop_duplicates(subset=["Ticker"], keep="first")
 
     os.makedirs("reports", exist_ok=True)
-
     dated_out = os.path.join("reports", f"covered_call_report_{date.today().isoformat()}.csv")
-    df.to_csv(dated_out, index=False)
-
     latest_out = os.path.join("reports", "covered_call_report_latest.csv")
+    df.to_csv(dated_out, index=False)
     df.to_csv(latest_out, index=False)
 
     os.makedirs("published", exist_ok=True)
-
     published_dated_out = os.path.join("published", f"covered_call_report_{date.today().isoformat()}.csv")
-    df.to_csv(published_dated_out, index=False)
-
     published_latest_out = os.path.join("published", "covered_call_report_latest.csv")
+    df.to_csv(published_dated_out, index=False)
     df.to_csv(published_latest_out, index=False)
 
     print(f"\nSaved CSV: {dated_out}")
