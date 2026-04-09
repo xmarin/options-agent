@@ -1,0 +1,25 @@
+services:
+  - type: static_site
+    name: options-agent-dashboard
+    repo: https://github.com/xmarin/options-agent
+    branch: main
+    rootDir: .
+    buildCommand: python3 build_static.py
+    staticPublishPath: .
+    pullRequestPreviewsEnabled: false
+
+  - type: cron
+    name: options-agent-monday-job
+    runtime: python
+    repo: https://github.com/xmarin/options-agent
+    branch: main
+    rootDir: .
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: |
+      python3 -m scanner.covered_call_scanner_tradier && \
+      python3 generate_weekly_summary.py && \
+      python3 build_trade_history_json.py && \
+      python3 build_live_overlay.py && \
+      python3 publish_reports_to_github.py
+    schedule: "0 6 * * 1"
