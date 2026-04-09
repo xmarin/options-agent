@@ -1,9 +1,9 @@
 services:
-  - type: static_site
+  - type: web
     name: options-agent-dashboard
+    runtime: static
     repo: https://github.com/xmarin/options-agent
     branch: main
-    rootDir: .
     buildCommand: python3 build_static.py
     staticPublishPath: .
     pullRequestPreviewsEnabled: false
