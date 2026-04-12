@@ -295,7 +295,7 @@ def main() -> None:
     df.columns = [str(c).strip() for c in df.columns]
 
     selected_rows = choose_rows_for_overlay(df, OVERLAY_LIMIT)
-    generated_at = pd.Timestamp.utcnow().isoformat()
+    generated_at = pd.Timestamp.now("UTC").isoformat()
 
     option_symbols = build_option_symbols(selected_rows)
     stock_symbols = build_stock_symbols(selected_rows)

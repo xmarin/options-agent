@@ -242,7 +242,7 @@ def main():
     summary = build_summary(records)
 
     payload = {
-        "generated_at": pd.Timestamp.utcnow().isoformat(),
+        "generated_at": pd.Timestamp.now("UTC").isoformat(),
         "source_file": str(CSV_PATH.name),
         "summary": summary,
         "records": records,
