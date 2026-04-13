@@ -1,51 +1,51 @@
 {
   "report_date": "2026-04-13",
   "best_trade": {
-    "ticker": "NET",
-    "reason": "NET offers the highest weekly return on capital (2.78%) and annual yield (2.54%) among the top candidates with no earnings risk this week and very high implied volatility (100th percentile), which increases premium value. Despite a slightly negative short-term price trend, its liquidity and premium levels are sufficient for a balanced covered call strategy.",
-    "biggest_risk": "The biggest risk is the recent downtrend in price (-21.27% over 20 days) and high implied volatility, which could lead to significant price drops or sharp moves beyond the strike, resulting in either assignment or losses on the underlying stock."
+    "ticker": "MU",
+    "reason": "MU offers the highest return on capital at 2.21% weekly with strong liquidity, high implied volatility percentile (97.1%), and no near-term earnings risk, making it ideal for covered call income.",
+    "biggest_risk": "The neutral trend and high implied volatility suggest possible price swings that could lead to assignment or price declines affecting income."
   },
-  "overall_summary": "This week's top covered call candidates rank highly due to a combination of solid premiums, moderate deltas around 0.3, near-the-money strikes (about 4-5% out of the money), and absence of imminent earnings risk. Many names come from tech and semiconductor sectors with elevated volatility, boosting premiums. The highest scoring names also show good liquidity and a balanced strategy mode, seeking stable income with controlled assignment risk.",
+  "overall_summary": "Top candidates rank highly mostly due to elevated implied volatility, solid liquidity, and positioning strikes slightly out of the money with favorable deltas near 0.37-0.40. Earnings risk is low or absent except for NFLX, which carries earnings risk in 3 days making it less desirable. NET and COIN have very high IV percentiles but weak short-term price trends and liquidity concerns respectively. MU stands out with the best combination of return, volatility, liquidity, and no earnings event soon.",
   "top_10_notes": [
     {
       "ticker": "MU",
-      "comment": "High premium and strong IV percentile (94.3%) make MU attractive; no earnings risk and neutral trend lowers risk."
-    },
-    {
-      "ticker": "COIN",
-      "comment": "Good return and liquidity but recent 20D price drop (-13.13%) and upcoming earnings a month out suggest moderate caution."
-    },
-    {
-      "ticker": "NET",
-      "comment": "Best weekly return and annual yield with very high IV percentile (100%); downside price trend needs monitoring."
-    },
-    {
-      "ticker": "AMD",
-      "comment": "Strong volume/liquidity and uptick in price; lower IV and annual yield reduce premium but safer trend."
+      "comment": "Highest weekly income and return on capital with excellent IV percentile and no earnings risk; solid liquidity."
     },
     {
       "ticker": "PLTR",
-      "comment": "Excellent liquidity and balanced option metrics, but recent price drop (-16.57%) and moderate premium."
+      "comment": "Good liquidity and no earnings risk but moderate negative 20D return; premium score is low."
     },
     {
       "ticker": "META",
-      "comment": "Low premium return and IV percentile; price near resistance with short time to earnings risk."
-    },
-    {
-      "ticker": "NFLX",
-      "comment": "Earnings due in 3 days creates significant risk; premium is smaller and price trends upward."
+      "comment": "Very liquid and no earnings risk soon but low premium and annual yield due to low IV percentile."
     },
     {
       "ticker": "AVGO",
-      "comment": "Sturdy volume and decent premium but relatively low IV percentile and low OTM score suggest less upside buffer."
+      "comment": "Good premium and no earnings risk but lower annual yield and moderate liquidity."
     },
     {
-      "ticker": "NVDA",
-      "comment": "Great liquidity but very low IV percentile and lower premium yield; longer time to earnings reduces immediate risk."
+      "ticker": "NET",
+      "comment": "Very high IV percentile and yield but poor liquidity and negative price trend recently."
+    },
+    {
+      "ticker": "AMD",
+      "comment": "Strong uptrend and decent premium but earnings risk in over 3 weeks and moderate IV percentile."
+    },
+    {
+      "ticker": "NFLX",
+      "comment": "Good liquidity and yield but high earnings risk in 3 days which could cause volatility and assignment."
+    },
+    {
+      "ticker": "ARM",
+      "comment": "Positive trend and decent premium but low liquidity may increase slippage risk."
+    },
+    {
+      "ticker": "COIN",
+      "comment": "Good liquidity and acceptable premium but negative short-term trend and only moderate IV percentile."
     },
     {
       "ticker": "BABA",
-      "comment": "Strong liquidity and moderate premium; negative short-term price trend hints at potential downside volatility."
+      "comment": "High liquidity but lowest return on capital, moderate IV percentile, and negative short-term price movement."
     }
   ]
 }
