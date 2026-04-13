@@ -2,50 +2,50 @@
   "report_date": "2026-04-13",
   "best_trade": {
     "ticker": "NET",
-    "reason": "NET offers the highest weekly return on capital at 2.78% and the highest annualized yield at 2.54%, supported by the highest implied volatility and IV percentile, indicating strong premium potential. The option is slightly OTM with good delta balance, and the stock trend is neutral with no earnings risk near term.",
-    "biggest_risk": "The stock has shown a negative 20-day return (-21.27%), suggesting recent weakness that may continue and could lead to a decline causing the option premium to erode or potential early assignment."
+    "reason": "NET offers the highest weekly return on capital (2.78%) and annual yield (2.54%) among the top candidates with no earnings risk this week and very high implied volatility (100th percentile), which increases premium value. Despite a slightly negative short-term price trend, its liquidity and premium levels are sufficient for a balanced covered call strategy.",
+    "biggest_risk": "The biggest risk is the recent downtrend in price (-21.27% over 20 days) and high implied volatility, which could lead to significant price drops or sharp moves beyond the strike, resulting in either assignment or losses on the underlying stock."
   },
-  "overall_summary": "This week's top candidates rank highly due to elevated implied volatility, desirable delta near 0.3, reasonable out-of-the-money strike spacing, and balanced earnings risk profiles. Most names avoid immediate earnings exposure, reducing premium decay uncertainty. NET stands out with the most attractive income metrics but shows signs of recent weakness, while NFLX presents earnings risk. META and NVDA offer lower premium yields due to subdued volatility.",
+  "overall_summary": "This week's top covered call candidates rank highly due to a combination of solid premiums, moderate deltas around 0.3, near-the-money strikes (about 4-5% out of the money), and absence of imminent earnings risk. Many names come from tech and semiconductor sectors with elevated volatility, boosting premiums. The highest scoring names also show good liquidity and a balanced strategy mode, seeking stable income with controlled assignment risk.",
   "top_10_notes": [
     {
       "ticker": "MU",
-      "comment": "Strong premium and high IV percentile (94.3) justify ranking, with balanced delta and no earnings risk."
+      "comment": "High premium and strong IV percentile (94.3%) make MU attractive; no earnings risk and neutral trend lowers risk."
     },
     {
       "ticker": "COIN",
-      "comment": "Good premium and yield with no earnings risk nearby, but recent price weakness is a concern."
+      "comment": "Good return and liquidity but recent 20D price drop (-13.13%) and upcoming earnings a month out suggest moderate caution."
     },
     {
       "ticker": "NET",
-      "comment": "Highest weekly and annual yield with 100% IV percentile, but recent sharp price drop adds risk."
+      "comment": "Best weekly return and annual yield with very high IV percentile (100%); downside price trend needs monitoring."
     },
     {
       "ticker": "AMD",
-      "comment": "Lower premium and return on capital; uptrend mode is positive and manageable earnings risk."
+      "comment": "Strong volume/liquidity and uptick in price; lower IV and annual yield reduce premium but safer trend."
     },
     {
       "ticker": "PLTR",
-      "comment": "Good liquidity and balanced metrics, but short term downtrend pressure noted."
+      "comment": "Excellent liquidity and balanced option metrics, but recent price drop (-16.57%) and moderate premium."
     },
     {
       "ticker": "META",
-      "comment": "Lower premium yield with a near-term earnings event; neutral trend and low IV suggest less attractive."
+      "comment": "Low premium return and IV percentile; price near resistance with short time to earnings risk."
     },
     {
       "ticker": "NFLX",
-      "comment": "Earnings risk due in 3 days makes it less desirable despite decent liquidity and premium."
+      "comment": "Earnings due in 3 days creates significant risk; premium is smaller and price trends upward."
     },
     {
       "ticker": "AVGO",
-      "comment": "Moderate premium with neutral trend but somewhat low IV percentile limits income."
+      "comment": "Sturdy volume and decent premium but relatively low IV percentile and low OTM score suggest less upside buffer."
     },
     {
       "ticker": "NVDA",
-      "comment": "Very low IV percentile and low premium yield despite strong liquidity pose challenges."
+      "comment": "Great liquidity but very low IV percentile and lower premium yield; longer time to earnings reduces immediate risk."
     },
     {
       "ticker": "BABA",
-      "comment": "Moderate liquidity and premium but recent price weakness and neutral trend may limit upside."
+      "comment": "Strong liquidity and moderate premium; negative short-term price trend hints at potential downside volatility."
     }
   ]
 }
