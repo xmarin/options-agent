@@ -1,51 +1,51 @@
 {
   "report_date": "2026-04-13",
   "best_trade": {
-    "ticker": "MU",
-    "reason": "MU ranks highest due to a strong combination of high implied volatility (IV percentile 97.1), a good premium return of 2.21% weekly, solid liquidity, neutral trend, and no earnings risk near term.",
-    "biggest_risk": "Potential downside in stock price if semiconductor sector experiences a sudden negative catalyst, leading to premium decay and possible early assignment."
+    "ticker": "COIN",
+    "reason": "COIN offers the highest weekly return on capital (2.92%) with solid option liquidity and a balanced risk profile. It also has no immediate earnings risk and a high IV percentile suggesting decent premium pricing.",
+    "biggest_risk": "Its recent price trend is neutral with a negative 20-day return, indicating potential short-term weakness or volatility."
   },
-  "overall_summary": "This week's top candidates show a preference for stocks with reasonably high IV and solid liquidity, offering balanced premium and assignment risk. Weekly expiration periods provide decent short-term yields. Caution is warranted for stocks close to earnings or with bearish recent returns.",
+  "overall_summary": "The top candidates this week are generally well-balanced with good premiums and liquidity. Most have no earnings risk within the very short timeframe except NFLX which carries earnings risk imminent. High implied volatility and good open interest support premium collection in these names. However, trends vary with some showing short-term weakness which could affect price stability and assignment risk.",
   "top_10_notes": [
     {
-      "ticker": "MU",
-      "comment": "Top scorer with high IV percentile and strong premium, no earnings risk, neutral trend."
+      "ticker": "COIN",
+      "comment": "Highest weekly return on capital and strong liquidity; no earnings risk nearby."
+    },
+    {
+      "ticker": "MRVL",
+      "comment": "Strong uptrend and high liquidity, but modest weekly return and no earnings date soon."
+    },
+    {
+      "ticker": "INTC",
+      "comment": "Very liquid with a good premium and uptrend, earnings just outside the week posing little risk."
     },
     {
       "ticker": "PLTR",
-      "comment": "Good liquidity and premium but recent 20D return is negative; earnings 3 weeks away, lowering immediate risk."
+      "comment": "Good premium and liquidity but negative recent price return and neutral trend."
     },
     {
-      "ticker": "META",
-      "comment": "Modest premium with low IV; earnings farther out; trend neutral but recent mild negative momentum."
-    },
-    {
-      "ticker": "AVGO",
-      "comment": "Strong 20D return positive and decent premium; moderate IV and no earnings risk."
-    },
-    {
-      "ticker": "NET",
-      "comment": "Highest IV percentile (100%) offers strong premium; however low liquidity and negative 20D return are concerns."
+      "ticker": "MU",
+      "comment": "Reasonable liquidity and premium but highest capital requirement and neutral/slightly negative trend."
     },
     {
       "ticker": "AMD",
-      "comment": "Uptrend strong; decent premium; earnings risk not immediate; moderate IV."
+      "comment": "Uptrend and decent premium but low annual yield and earnings about 3 weeks away."
+    },
+    {
+      "ticker": "META",
+      "comment": "High liquidity and significant premium but low IV percentile and neutral price trend."
+    },
+    {
+      "ticker": "NET",
+      "comment": "Very high IV percentile suggesting expensive options but poor liquidity and negative short-term return."
+    },
+    {
+      "ticker": "AVGO",
+      "comment": "Neutral trend and liquidity with modest premium; no earnings risk."
     },
     {
       "ticker": "NFLX",
-      "comment": "Good liquidity and premium, but risky due to earnings event in 3 days which can cause volatility."
-    },
-    {
-      "ticker": "ARM",
-      "comment": "Strong uptrend and good premium but poor liquidity poses execution risk."
-    },
-    {
-      "ticker": "COIN",
-      "comment": "Above average IV and liquidity; slightly negative trend and premium modest."
-    },
-    {
-      "ticker": "BABA",
-      "comment": "High liquidity with conservative premium; mild negative trend and lower IV percentile."
+      "comment": "Earnings risk imminent in 3 days, lowering desirability despite good liquidity and premium."
     }
   ]
 }
