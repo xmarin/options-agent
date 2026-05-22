@@ -1,12 +1,16 @@
 import json
 import math
 import os
+import warnings
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
-import requests
+import yfinance as yf
 from dotenv import load_dotenv
+
+# Suppress noisy yfinance warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 load_dotenv()
 
@@ -15,12 +19,9 @@ PUBLISHED_DIR = ROOT / "published"
 LATEST_REPORT = PUBLISHED_DIR / "covered_call_report_latest.csv"
 OUTPUT_PATH = PUBLISHED_DIR / "live_overlay.json"
 
-TRADIER_TOKEN = os.getenv("TRADIER_TOKEN")
-TRADIER_BASE_URL = os.getenv("TRADIER_BASE_URL", "https://api.tradier.com/v1").rstrip("/")
 OVERLAY_LIMIT = int(os.getenv("LIVE_OVERLAY_LIMIT", "10"))
 STALE_BID_THRESHOLD_PCT = float(os.getenv("LIVE_OVERLAY_STALE_BID_THRESHOLD", "0.10"))
 STALE_STOCK_THRESHOLD_PCT = float(os.getenv("LIVE_OVERLAY_STALE_STOCK_THRESHOLD", "0.03"))
-REQUEST_TIMEOUT_SECONDS = int(os.getenv("LIVE_OVERLAY_TIMEOUT_SECONDS", "20"))
 
 
 def safe_float(value: Any) -> float | None:
@@ -65,41 +66,71 @@ def option_symbol_from_row(row: pd.Series) -> str | None:
     return f"{ticker}{exp_part}C{strike_formatted}"
 
 
-def chunked(items: list[str], size: int) -> list[list[str]]:
-    return [items[i:i + size] for i in range(0, len(items), size)]
-
-
-def fetch_tradier_quotes(symbols: list[str]) -> dict[str, dict]:
+def fetch_yf_stock_quotes(symbols: list[str]) -> dict[str, dict]:
+    """Fetch live stock quotes for a list of tickers using yfinance."""
     if not symbols:
         return {}
-    if not TRADIER_TOKEN:
+    results: dict[str, dict] = {}
+    for sym in sorted(set(symbols)):
+        try:
+            t = yf.Ticker(sym)
+            info = t.fast_info
+            bid = safe_float(getattr(info, "bid", None))
+            ask = safe_float(getattr(info, "ask", None))
+            last = safe_float(getattr(info, "last_price", None))
+            if last is None or last <= 0:
+                hist = t.history(period="2d")
+                if not hist.empty:
+                    last = safe_float(hist["Close"].iloc[-1])
+            results[sym] = {"symbol": sym, "bid": bid, "ask": ask, "last": last, "close": last}
+        except Exception:
+            pass
+    return results
+
+
+def fetch_yf_option_quotes(option_symbols: list[str], rows: pd.DataFrame) -> dict[str, dict]:
+    """
+    Fetch live option quotes. option_symbols are OCC-format strings (e.g. AAPL260117C00150000).
+    We derive ticker+expiration+strike from the scanned rows to re-fetch the chain via yfinance.
+    """
+    if not option_symbols or rows.empty:
         return {}
 
-    headers = {
-        "Authorization": f"Bearer {TRADIER_TOKEN}",
-        "Accept": "application/json",
-    }
-    url = f"{TRADIER_BASE_URL}/markets/quotes"
-
     results: dict[str, dict] = {}
-    for batch in chunked(sorted(set(symbols)), 200):
-        resp = requests.get(
-            url,
-            headers=headers,
-            params={"symbols": ",".join(batch), "greeks": "false"},
-            timeout=REQUEST_TIMEOUT_SECONDS,
-        )
-        resp.raise_for_status()
-        payload = resp.json()
-        quotes = payload.get("quotes", {}).get("quote")
-        if not quotes:
-            continue
-        if isinstance(quotes, dict):
-            quotes = [quotes]
-        for quote in quotes:
-            symbol = clean_str(quote.get("symbol", "")).upper()
-            if symbol:
-                results[symbol] = quote
+    sym_set = set(option_symbols)
+
+    # Group by (ticker, expiration) to minimise API calls
+    from collections import defaultdict
+    groups: dict[tuple, list] = defaultdict(list)
+    for _, row in rows.iterrows():
+        ticker = clean_str(row.get("Ticker", "")).upper()
+        expiration = clean_str(row.get("Expiration", ""))
+        if ticker and expiration:
+            groups[(ticker, expiration)].append(row)
+
+    for (ticker, expiration), _rows in groups.items():
+        try:
+            chain = yf.Ticker(ticker).option_chain(expiration)
+            calls_df = chain.calls
+            if calls_df is None or calls_df.empty:
+                continue
+            for _, opt_row in calls_df.iterrows():
+                strike = safe_float(opt_row.get("strike"))
+                if strike is None:
+                    continue
+                # Re-build OCC symbol to match
+                exp_part = pd.to_datetime(expiration).strftime("%y%m%d")
+                strike_int = int(round(strike * 1000))
+                occ = f"{ticker}{exp_part}C{strike_int:08d}"
+                if occ in sym_set:
+                    results[occ] = {
+                        "symbol": occ,
+                        "bid": safe_float(opt_row.get("bid")),
+                        "ask": safe_float(opt_row.get("ask")),
+                        "last": safe_float(opt_row.get("lastPrice")),
+                    }
+        except Exception:
+            pass
 
     return results
 
@@ -200,10 +231,6 @@ def build_record(row: pd.Series, option_quotes: dict[str, dict], stock_quotes: d
         "error": None,
     }
 
-    if not TRADIER_TOKEN:
-        result["error"] = "Missing TRADIER_TOKEN"
-        return result
-
     if not option_symbol:
         result["error"] = "Missing option symbol"
         return result
@@ -301,8 +328,8 @@ def main() -> None:
     stock_symbols = build_stock_symbols(selected_rows)
 
     try:
-        option_quotes = fetch_tradier_quotes(option_symbols)
-        stock_quotes = fetch_tradier_quotes(stock_symbols)
+        stock_quotes = fetch_yf_stock_quotes(stock_symbols)
+        option_quotes = fetch_yf_option_quotes(option_symbols, selected_rows)
     except Exception as exc:
         payload = {
             "generated_at": generated_at,

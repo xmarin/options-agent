@@ -1,4 +1,7 @@
 requests
 pandas
+numpy
 python-dotenv
 openai
+yfinance
+scipy

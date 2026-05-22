@@ -1,11 +1,18 @@
+import math
 import os
 import sys
 import time
+import warnings
 from datetime import date, datetime, timedelta
 
 import pandas as pd
 import requests
+import yfinance as yf
 from dotenv import load_dotenv
+from scipy.stats import norm
+
+# Suppress noisy yfinance warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 load_dotenv()
 
@@ -23,8 +30,6 @@ from config.settings import (
     MIN_OTM_PCT,
     MIN_VOLUME,
     STRATEGY_TARGETS,
-    TRADIER_BASE_URL,
-    TRADIER_TOKEN,
 )
 
 
@@ -56,21 +61,88 @@ def load_tickers(path: str = "data/tickers.csv", limit: int = 500) -> list[str]:
     )
 
 
-def tradier_get(path: str, params: dict) -> dict:
-    if not TRADIER_TOKEN:
-        raise RuntimeError(
-            "Missing TRADIER_TOKEN. Set it in your environment or Render service settings."
-        )
+RISK_FREE_RATE = float(os.getenv("RISK_FREE_RATE", "0.05"))
 
-    headers = {
-        "Authorization": f"Bearer {TRADIER_TOKEN}",
-        "Accept": "application/json",
-    }
+# Module-level SPY benchmark closes, populated once in main()
+_SPY_CLOSES: list[float] = []
 
-    url = f"{TRADIER_BASE_URL}{path}"
-    resp = requests.get(url, headers=headers, params=params, timeout=30)
-    resp.raise_for_status()
-    return resp.json()
+
+def bs_delta(S: float, K: float, T: float, sigma: float) -> float | None:
+    """Black-Scholes call delta. T in years, sigma as decimal (e.g. 0.25 = 25%)."""
+    if T <= 0 or sigma is None or sigma <= 0 or S <= 0 or K <= 0:
+        return None
+    try:
+        d1 = (math.log(S / K) + (RISK_FREE_RATE + 0.5 * sigma ** 2) * T) / (sigma * math.sqrt(T))
+        return float(norm.cdf(d1))
+    except Exception:
+        return None
+
+
+def compute_hv_rank(closes: list[float], window: int = 21) -> float | None:
+    """
+    HV Rank: where is current 21-day realized vol vs its 52-week range?
+    Returns 0.0–1.0 (1.0 = historically high vol = best for premium selling).
+    """
+    if len(closes) < window * 2 + 10:
+        return None
+    log_rets: list[float] = []
+    for i in range(1, len(closes)):
+        if closes[i - 1] > 0 and closes[i] > 0:
+            log_rets.append(math.log(closes[i] / closes[i - 1]))
+    if len(log_rets) < window + 20:
+        return None
+    hvs: list[float] = []
+    for i in range(window, len(log_rets) + 1):
+        w = log_rets[i - window : i]
+        mean = sum(w) / window
+        variance = sum((r - mean) ** 2 for r in w) / (window - 1)
+        hvs.append((variance ** 0.5) * (252 ** 0.5))
+    if not hvs:
+        return None
+    lo, hi = min(hvs), max(hvs)
+    if hi == lo:
+        return 0.5
+    return clamp((hvs[-1] - lo) / (hi - lo))
+
+
+def compute_rsi(closes: list[float], period: int = 14) -> float | None:
+    """Wilder's RSI-14. Returns 0–100 or None."""
+    if len(closes) < period + 3:
+        return None
+    deltas = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
+    recent = deltas[-(period + 1) :]
+    gains = [d if d > 0 else 0.0 for d in recent]
+    losses = [-d if d < 0 else 0.0 for d in recent]
+    avg_gain = sum(gains[:period]) / period
+    avg_loss = sum(losses[:period]) / period
+    avg_gain = (avg_gain * (period - 1) + gains[-1]) / period
+    avg_loss = (avg_loss * (period - 1) + losses[-1]) / period
+    if avg_loss == 0:
+        return 100.0
+    rs = avg_gain / avg_loss
+    return round(100.0 - (100.0 / (1 + rs)), 1)
+
+
+def compute_beta(ticker_closes: list[float], spy_closes: list[float], window: int = 90) -> float | None:
+    """Beta vs SPY over last `window` trading days."""
+    n = min(len(ticker_closes), len(spy_closes), window + 1)
+    if n < 20:
+        return None
+    tc = ticker_closes[-n:]
+    sc = spy_closes[-n:]
+    t_rets = [(tc[i] / tc[i - 1]) - 1 for i in range(1, len(tc))]
+    s_rets = [(sc[i] / sc[i - 1]) - 1 for i in range(1, len(sc))]
+    nr = min(len(t_rets), len(s_rets))
+    if nr < 15:
+        return None
+    t_rets, s_rets = t_rets[:nr], s_rets[:nr]
+    mean_t = sum(t_rets) / nr
+    mean_s = sum(s_rets) / nr
+    cov = sum((t_rets[i] - mean_t) * (s_rets[i] - mean_s) for i in range(nr)) / (nr - 1)
+    var_s = sum((s_rets[i] - mean_s) ** 2 for i in range(nr)) / (nr - 1)
+    if var_s < 1e-10:
+        return None
+    return round(cov / var_s, 3)
 
 
 def safe_float(x):
@@ -111,35 +183,28 @@ def build_occ_option_symbol(ticker: str, expiration: str, option_type: str, stri
 
 
 def get_last_price(ticker: str) -> float | None:
-    data = tradier_get("/markets/quotes", {"symbols": ticker, "greeks": "false"})
-    q = data.get("quotes", {}).get("quote")
-
-    if not q:
+    try:
+        t = yf.Ticker(ticker)
+        info = t.fast_info
+        price = safe_float(getattr(info, "last_price", None))
+        if price and price > 0:
+            return price
+        # Fallback: last close from recent history
+        hist = t.history(period="2d")
+        if not hist.empty:
+            return safe_float(hist["Close"].iloc[-1])
         return None
-
-    if isinstance(q, list):
-        q = q[0]
-
-    for field in ["last", "close", "prevclose"]:
-        val = safe_float(q.get(field))
-        if val is not None and val > 0:
-            return val
-
-    return None
+    except Exception:
+        return None
 
 
 def get_expirations(ticker: str) -> list[str]:
-    data = tradier_get(
-        "/markets/options/expirations",
-        {
-            "symbol": ticker,
-            "includeAllRoots": "true",
-        },
-    )
-    dates = data.get("expirations", {}).get("date", [])
-    if isinstance(dates, str):
-        return [dates]
-    return list(dates)
+    try:
+        t = yf.Ticker(ticker)
+        exps = t.options  # tuple of "YYYY-MM-DD" strings
+        return list(exps) if exps else []
+    except Exception:
+        return []
 
 
 def choose_weekly_expiration(expirations: list[str]) -> str | None:
@@ -155,62 +220,76 @@ def choose_weekly_expiration(expirations: list[str]) -> str | None:
     return pool[0][0]
 
 
-def get_option_chain(ticker: str, expiration: str) -> list[dict]:
-    data = tradier_get(
-        "/markets/options/chains",
-        {
-            "symbol": ticker,
-            "expiration": expiration,
-            "greeks": "true",
-        },
-    )
-    opt = data.get("options", {}).get("option")
-    if not opt:
-        return []
-    return opt if isinstance(opt, list) else [opt]
-
-
-def get_price_history(ticker: str, lookback_days: int = 90) -> list[float]:
-    end_dt = date.today()
-    start_dt = end_dt - timedelta(days=lookback_days)
-
-    data = tradier_get(
-        "/markets/history",
-        {
-            "symbol": ticker,
-            "interval": "daily",
-            "start": start_dt.isoformat(),
-            "end": end_dt.isoformat(),
-        },
-    )
-
-    days = data.get("history", {}).get("day")
-    if not days:
+def get_option_chain(ticker: str, expiration: str, spot: float) -> list[dict]:
+    """
+    Returns a list of option dicts in the same shape the rest of the scanner expects:
+    option_type, strike, bid, ask, volume, open_interest, greeks.delta, greeks.mid_iv
+    Delta is computed via Black-Scholes using the implied volatility yfinance provides.
+    """
+    try:
+        t = yf.Ticker(ticker)
+        chain = t.option_chain(expiration)
+        calls_df = chain.calls
+    except Exception:
         return []
 
-    if isinstance(days, dict):
-        days = [days]
+    if calls_df is None or calls_df.empty:
+        return []
 
-    closes = []
-    for row in days:
-        close_val = safe_float(row.get("close"))
-        if close_val is not None:
-            closes.append(close_val)
+    exp_date = parse_date(expiration)
+    T = (exp_date - date.today()).days / 365.0
 
-    return closes
+    results = []
+    for _, row in calls_df.iterrows():
+        strike = safe_float(row.get("strike"))
+        bid = safe_float(row.get("bid"))
+        ask = safe_float(row.get("ask"))
+        volume = safe_int(row.get("volume"))
+        open_interest = safe_int(row.get("openInterest"))
+        iv = safe_float(row.get("impliedVolatility"))
+
+        delta = bs_delta(spot, strike, T, iv) if (strike and iv) else None
+
+        results.append({
+            "option_type": "call",
+            "strike": strike,
+            "bid": bid,
+            "ask": ask,
+            "volume": volume,
+            "open_interest": open_interest,
+            "greeks": {
+                "delta": delta,
+                "mid_iv": iv,
+                "smv_vol": iv,
+            },
+        })
+
+    return results
 
 
-def get_trend_metrics(ticker: str) -> dict:
-    closes = get_price_history(ticker, lookback_days=120)
+def get_price_history(ticker: str, lookback_days: int = 365) -> list[float]:
+    try:
+        end_dt = date.today()
+        start_dt = end_dt - timedelta(days=lookback_days)
+        hist = yf.Ticker(ticker).history(start=start_dt.isoformat(), end=end_dt.isoformat())
+        if hist.empty:
+            return []
+        return [safe_float(v) for v in hist["Close"].tolist() if safe_float(v) is not None]
+    except Exception:
+        return []
+
+
+def get_trend_metrics(ticker: str, spy_closes: list[float] | None = None) -> dict:
+    closes = get_price_history(ticker, lookback_days=365)
+
+    base = {
+        "SMA20": None, "SMA50": None, "20D Return": None,
+        "Trend": "unknown", "Trend Score": 0.5,
+        "HV Rank": None, "RSI": None, "Beta": None,
+    }
 
     if len(closes) < 55:
-        return {
-            "SMA20": None,
-            "SMA50": None,
-            "20D Return": None,
-            "Trend": "unknown",
-            "Trend Score": 0.5,
-        }
+        return base
 
     sma20 = sum(closes[-20:]) / 20.0
     sma50 = sum(closes[-50:]) / 50.0
@@ -218,14 +297,15 @@ def get_trend_metrics(ticker: str) -> dict:
     spot = closes[-1]
 
     if ret20 is not None and spot > sma20 and sma20 > sma50 and ret20 > 0:
-        trend = "up"
-        trend_score = 1.0
+        trend, trend_score = "up", 1.0
     elif ret20 is not None and spot < sma20 and sma20 < sma50 and ret20 < 0:
-        trend = "down"
-        trend_score = 0.0
+        trend, trend_score = "down", 0.0
     else:
-        trend = "neutral"
-        trend_score = 0.5
+        trend, trend_score = "neutral", 0.5
+
+    hv_rank = compute_hv_rank(closes)
+    rsi = compute_rsi(closes)
+    beta = compute_beta(closes, spy_closes) if spy_closes else None
 
     return {
         "SMA20": round(sma20, 2),
@@ -233,6 +313,9 @@ def get_trend_metrics(ticker: str) -> dict:
         "20D Return": round(ret20, 4) if ret20 is not None else None,
         "Trend": trend,
         "Trend Score": trend_score,
+        "HV Rank": round(hv_rank, 4) if hv_rank is not None else None,
+        "RSI": rsi,
+        "Beta": beta,
     }
 
 
@@ -347,12 +430,12 @@ def calculate_component_scores(
     }
 
 
-def scan_one_ticker(ticker: str, earnings_map: dict) -> list[dict]:
+def scan_one_ticker(ticker: str, earnings_map: dict, spy_closes: list[float] | None = None) -> list[dict]:
     spot = get_last_price(ticker)
     if not spot or spot <= 0:
         return []
 
-    trend = get_trend_metrics(ticker)
+    trend = get_trend_metrics(ticker, spy_closes)
     if SKIP_DOWNTREND and trend["Trend"] == "down":
         return []
 
@@ -365,7 +448,7 @@ def scan_one_ticker(ticker: str, earnings_map: dict) -> list[dict]:
         return []
 
     days = dte(exp)
-    chain = get_option_chain(ticker, exp)
+    chain = get_option_chain(ticker, exp, spot)
 
     results = []
     for c in chain:
@@ -469,6 +552,9 @@ def scan_one_ticker(ticker: str, earnings_map: dict) -> list[dict]:
             "SMA50": trend["SMA50"],
             "20D Return": trend["20D Return"],
             "Trend": trend["Trend"],
+            "HV Rank": trend["HV Rank"],
+            "RSI": trend["RSI"],
+            "Beta": trend["Beta"],
             "Strategy Mode": CC_STRATEGY_MODE,
         }
         row.update(component_scores)
@@ -478,26 +564,60 @@ def scan_one_ticker(ticker: str, earnings_map: dict) -> list[dict]:
 
 
 def apply_final_scoring(df: pd.DataFrame) -> pd.DataFrame:
+    # Cross-scan IV percentile (how this option ranks vs others in today's scan)
     if "Current IV" in df.columns:
         df["IV Percentile (Scan)"] = (df["Current IV"].rank(pct=True) * 100).round(1)
     else:
         df["IV Percentile (Scan)"] = None
 
-    iv_component = df["IV Percentile (Scan)"].fillna(0) / 100.0
+    iv_component = pd.to_numeric(df["IV Percentile (Scan)"], errors="coerce").fillna(0) / 100.0
+
+    # HV Rank: 52-week realized-vol rank (proxy for IV rank vs own history)
+    hv_rank_component = pd.to_numeric(df.get("HV Rank", pd.Series(dtype=float)), errors="coerce").fillna(0.5)
+
+    # RSI signal: sweet spot 45–65 for covered calls (not oversold, not overbought)
+    def _rsi_score(rsi_val) -> float:
+        if pd.isna(rsi_val):
+            return 0.5
+        rsi_val = float(rsi_val)
+        if 45 <= rsi_val <= 65:
+            return 1.0
+        elif rsi_val < 45:
+            return max(0.0, rsi_val / 45.0)
+        else:
+            return max(0.0, 1.0 - (rsi_val - 65.0) / 35.0)
+
+    rsi_col = df["RSI"] if "RSI" in df.columns else pd.Series([None] * len(df))
+    rsi_component = rsi_col.apply(_rsi_score)
+
+    # Beta signal: prefer moderate beta (~1.0), penalise very high or very low
+    def _beta_score(beta_val) -> float:
+        if pd.isna(beta_val):
+            return 0.5
+        return max(0.0, min(1.0, 1.0 - abs(float(beta_val) - 1.0) * 0.5))
+
+    beta_col = df["Beta"] if "Beta" in df.columns else pd.Series([None] * len(df))
+    beta_component = beta_col.apply(_beta_score)
+
     trend_component = df["Trend"].map({"up": 1.0, "neutral": 0.5, "down": 0.0}).fillna(0.5)
     score_component = df["Score"].fillna(0)
 
+    core_weight_total = (
+        STRATEGY_CONFIG["premium_weight"]
+        + STRATEGY_CONFIG["delta_weight"]
+        + STRATEGY_CONFIG["otm_weight"]
+        + STRATEGY_CONFIG["liquidity_weight"]
+        + STRATEGY_CONFIG["earnings_weight"]
+        + STRATEGY_CONFIG["roc_weight"]
+    )
+
     final_score = (
-        score_component * (
-            STRATEGY_CONFIG["premium_weight"]
-            + STRATEGY_CONFIG["delta_weight"]
-            + STRATEGY_CONFIG["otm_weight"]
-            + STRATEGY_CONFIG["liquidity_weight"]
-            + STRATEGY_CONFIG["earnings_weight"]
-            + STRATEGY_CONFIG["roc_weight"]
-        )
-        + iv_component * STRATEGY_CONFIG["iv_weight"]
-        + trend_component * STRATEGY_CONFIG["trend_weight"]
+        score_component * core_weight_total
+        + iv_component      * STRATEGY_CONFIG.get("iv_weight", 0.0)
+        + hv_rank_component * STRATEGY_CONFIG.get("iv_rank_weight", 0.0)
+        + trend_component   * STRATEGY_CONFIG.get("trend_weight", 0.0)
+        + rsi_component     * STRATEGY_CONFIG.get("rsi_weight", 0.0)
+        + beta_component    * STRATEGY_CONFIG.get("beta_weight", 0.0)
     )
 
     df["Final Score"] = final_score.round(4)
@@ -505,14 +625,17 @@ def apply_final_scoring(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def main():
-    if not TRADIER_TOKEN:
-        raise RuntimeError("Missing TRADIER_TOKEN in environment.")
-
+    global _SPY_CLOSES
     tickers = load_tickers(limit=500)
     if len(sys.argv) > 1:
         tickers = [t.strip().upper() for t in sys.argv[1].split(",") if t.strip()]
 
     print(f"Scanner strategy mode: {CC_STRATEGY_MODE}")
+
+    print("Fetching SPY benchmark history for beta calculation...")
+    _SPY_CLOSES = get_price_history("SPY", lookback_days=365)
+    print(f"  SPY history: {len(_SPY_CLOSES)} days loaded")
+
     print("Loading earnings calendar...")
     earnings_map = get_earnings_map(days_ahead=90)
     print(f"Earnings entries loaded: {len(earnings_map)}")
@@ -521,7 +644,7 @@ def main():
     for i, ticker in enumerate(tickers, start=1):
         try:
             print(f"[{i}/{len(tickers)}] {ticker}")
-            all_rows.extend(scan_one_ticker(ticker, earnings_map))
+            all_rows.extend(scan_one_ticker(ticker, earnings_map, _SPY_CLOSES))
             time.sleep(0.15)
         except Exception as e:
             print(f"  ! {ticker} error: {e}")

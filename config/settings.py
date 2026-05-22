@@ -1,8 +1,6 @@
 import os
 
 # External services
-TRADIER_TOKEN = os.getenv("TRADIER_TOKEN", "").strip()
-TRADIER_BASE_URL = os.getenv("TRADIER_BASE_URL", "https://api.tradier.com/v1").strip()
 FMP_API_KEY = os.getenv("FMP_API_KEY", "").strip()
 
 # Baseline scanner filters
@@ -25,40 +23,52 @@ DEFAULT_SKIP_DOWNTREND = os.getenv("DEFAULT_SKIP_DOWNTREND", "true").strip().low
 # Strategy targets and weights
 # Weights below sum to 1.0 for each mode.
 STRATEGY_TARGETS = {
+    # Income: maximize premium/ROC, tolerates higher delta, favors elevated IV
     "income": {
         "target_delta": 0.38,
         "target_otm": 0.025,
-        "premium_weight": 0.24,
-        "delta_weight": 0.18,
-        "otm_weight": 0.08,
-        "liquidity_weight": 0.14,
-        "earnings_weight": 0.08,
-        "roc_weight": 0.18,
-        "iv_weight": 0.05,
-        "trend_weight": 0.05,
+        "premium_weight": 0.21,
+        "delta_weight": 0.16,
+        "otm_weight": 0.07,
+        "liquidity_weight": 0.12,
+        "earnings_weight": 0.07,
+        "roc_weight": 0.15,
+        "iv_weight": 0.02,       # cross-scan IV rank
+        "iv_rank_weight": 0.10,  # 52-week HV rank (elevated vol = better premiums)
+        "trend_weight": 0.04,
+        "rsi_weight": 0.04,      # RSI 45-65 sweet spot
+        "beta_weight": 0.02,     # mild beta preference
     },
+    # Balanced: well-rounded, moderate delta, good liquidity
     "balanced": {
         "target_delta": 0.30,
         "target_otm": 0.045,
-        "premium_weight": 0.18,
-        "delta_weight": 0.22,
-        "otm_weight": 0.12,
-        "liquidity_weight": 0.15,
-        "earnings_weight": 0.10,
-        "roc_weight": 0.13,
-        "iv_weight": 0.05,
+        "premium_weight": 0.16,
+        "delta_weight": 0.20,
+        "otm_weight": 0.10,
+        "liquidity_weight": 0.14,
+        "earnings_weight": 0.09,
+        "roc_weight": 0.11,
+        "iv_weight": 0.03,
+        "iv_rank_weight": 0.08,
         "trend_weight": 0.05,
+        "rsi_weight": 0.03,
+        "beta_weight": 0.01,
     },
+    # Conservative: lower delta, high OTM, low beta, max protection
     "conservative": {
         "target_delta": 0.22,
         "target_otm": 0.065,
-        "premium_weight": 0.14,
-        "delta_weight": 0.24,
-        "otm_weight": 0.16,
-        "liquidity_weight": 0.16,
-        "earnings_weight": 0.10,
-        "roc_weight": 0.10,
-        "iv_weight": 0.05,
+        "premium_weight": 0.12,
+        "delta_weight": 0.21,
+        "otm_weight": 0.14,
+        "liquidity_weight": 0.15,
+        "earnings_weight": 0.09,
+        "roc_weight": 0.08,
+        "iv_weight": 0.03,
+        "iv_rank_weight": 0.06,
         "trend_weight": 0.05,
+        "rsi_weight": 0.04,
+        "beta_weight": 0.03,     # higher weight: avoid high-beta stocks
     },
 }
