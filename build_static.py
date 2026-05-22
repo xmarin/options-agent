@@ -22,6 +22,9 @@ dashboard_src = dashboard_src.replace("%%SUPABASE_URL%%",      os.getenv("SUPABA
 dashboard_src = dashboard_src.replace("%%SUPABASE_ANON_KEY%%", os.getenv("SUPABASE_ANON_KEY", ""))
 (SITE / "index.html").write_text(dashboard_src, encoding="utf-8")
 
+# Also write to repo root so Render's staticPublishPath: . serves the updated dashboard
+(ROOT / "index.html").write_text(dashboard_src, encoding="utf-8")
+
 target_published = SITE / "published"
 target_published.mkdir(parents=True, exist_ok=True)
 
