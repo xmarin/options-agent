@@ -1,0 +1,177 @@
+<svg viewBox="0 0 860 620" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, -apple-system, sans-serif">
+  <title>Options Agent Architecture Diagram</title>
+  <desc>System architecture showing how yfinance, GitHub, Render Cron Job, Render Static Site, Dashboard, and Supabase connect together.</desc>
+
+  <!-- Background -->
+  <rect width="860" height="620" fill="#f8f9fa" rx="12"/>
+
+  <!-- Zone: Data Sources -->
+  <rect x="20" y="30" width="170" height="560" rx="10" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="105" y="55" text-anchor="middle" font-size="11" font-weight="600" fill="#6366f1" letter-spacing="0.5">DATA SOURCES</text>
+
+  <!-- Zone: Processing -->
+  <rect x="210" y="30" width="200" height="560" rx="10" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="310" y="55" text-anchor="middle" font-size="11" font-weight="600" fill="#16a34a" letter-spacing="0.5">PROCESSING · RENDER</text>
+
+  <!-- Zone: Storage -->
+  <rect x="430" y="30" width="200" height="560" rx="10" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="530" y="55" text-anchor="middle" font-size="11" font-weight="600" fill="#ea580c" letter-spacing="0.5">STORAGE</text>
+
+  <!-- Zone: Frontend -->
+  <rect x="650" y="30" width="190" height="560" rx="10" fill="#fdf4ff" stroke="#e9d5ff" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="745" y="55" text-anchor="middle" font-size="11" font-weight="600" fill="#9333ea" letter-spacing="0.5">FRONTEND · RENDER</text>
+
+  <!-- yfinance -->
+  <rect x="35" y="90" width="140" height="76" rx="8" fill="#fff" stroke="#6366f1" stroke-width="1.8"/>
+  <rect x="35" y="90" width="140" height="26" rx="8" fill="#6366f1"/>
+  <rect x="35" y="104" width="140" height="12" fill="#6366f1"/>
+  <text x="105" y="107" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">yfinance</text>
+  <text x="105" y="127" text-anchor="middle" font-size="10" fill="#374151">Stock prices</text>
+  <text x="105" y="141" text-anchor="middle" font-size="10" fill="#374151">Option chains &amp; IV</text>
+  <text x="105" y="155" text-anchor="middle" font-size="10" fill="#374151">Price history</text>
+
+  <!-- FMP / yfinance -->
+  <rect x="35" y="200" width="140" height="76" rx="8" fill="#fff" stroke="#6366f1" stroke-width="1.8"/>
+  <rect x="35" y="200" width="140" height="26" rx="8" fill="#6366f1"/>
+  <rect x="35" y="214" width="140" height="12" fill="#6366f1"/>
+  <text x="105" y="217" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">FMP / yfinance</text>
+  <text x="105" y="237" text-anchor="middle" font-size="10" fill="#374151">Earnings calendar</text>
+  <text x="105" y="251" text-anchor="middle" font-size="10" fill="#374151">(earnings risk flag)</text>
+  <text x="105" y="265" text-anchor="middle" font-size="10" fill="#374151">288 tickers</text>
+
+  <!-- tickers.csv -->
+  <rect x="35" y="310" width="140" height="60" rx="8" fill="#fff" stroke="#6366f1" stroke-width="1.8"/>
+  <rect x="35" y="310" width="140" height="26" rx="8" fill="#6366f1"/>
+  <rect x="35" y="324" width="140" height="12" fill="#6366f1"/>
+  <text x="105" y="327" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">data/tickers.csv</text>
+  <text x="105" y="347" text-anchor="middle" font-size="10" fill="#374151">S&amp;P 500 + ETFs</text>
+  <text x="105" y="360" text-anchor="middle" font-size="10" fill="#374151">Local config file</text>
+
+  <!-- Render Cron Job -->
+  <rect x="225" y="90" width="170" height="90" rx="8" fill="#fff" stroke="#16a34a" stroke-width="1.8"/>
+  <rect x="225" y="90" width="170" height="26" rx="8" fill="#16a34a"/>
+  <rect x="225" y="104" width="170" height="12" fill="#16a34a"/>
+  <text x="310" y="107" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Render Cron Job</text>
+  <text x="310" y="127" text-anchor="middle" font-size="10" fill="#374151">Runs daily at market open</text>
+  <text x="310" y="141" text-anchor="middle" font-size="10" fill="#374151">covered_call_scanner.py</text>
+  <text x="310" y="155" text-anchor="middle" font-size="10" fill="#374151">Scores &amp; ranks 288 tickers</text>
+  <text x="310" y="169" text-anchor="middle" font-size="10" fill="#374151">Env vars: .env / Render</text>
+
+  <!-- Live Overlay Builder -->
+  <rect x="225" y="210" width="170" height="76" rx="8" fill="#fff" stroke="#16a34a" stroke-width="1.8"/>
+  <rect x="225" y="210" width="170" height="26" rx="8" fill="#16a34a"/>
+  <rect x="225" y="224" width="170" height="12" fill="#16a34a"/>
+  <text x="310" y="227" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Live Overlay Builder</text>
+  <text x="310" y="247" text-anchor="middle" font-size="10" fill="#374151">build_live_overlay.py</text>
+  <text x="310" y="261" text-anchor="middle" font-size="10" fill="#374151">Re-fetches top 10 quotes</text>
+  <text x="310" y="275" text-anchor="middle" font-size="10" fill="#374151">Detects stale premiums</text>
+
+  <!-- Static Site Builder -->
+  <rect x="225" y="315" width="170" height="76" rx="8" fill="#fff" stroke="#16a34a" stroke-width="1.8"/>
+  <rect x="225" y="315" width="170" height="26" rx="8" fill="#16a34a"/>
+  <rect x="225" y="329" width="170" height="12" fill="#16a34a"/>
+  <text x="310" y="332" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Static Site Builder</text>
+  <text x="310" y="352" text-anchor="middle" font-size="10" fill="#374151">build_static.py</text>
+  <text x="310" y="366" text-anchor="middle" font-size="10" fill="#374151">Injects Supabase keys</text>
+  <text x="310" y="380" text-anchor="middle" font-size="10" fill="#374151">Writes index.html</text>
+
+  <!-- GitHub Repo -->
+  <rect x="445" y="90" width="170" height="76" rx="8" fill="#fff" stroke="#ea580c" stroke-width="1.8"/>
+  <rect x="445" y="90" width="170" height="26" rx="8" fill="#ea580c"/>
+  <rect x="445" y="104" width="170" height="12" fill="#ea580c"/>
+  <text x="530" y="107" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">GitHub Repo</text>
+  <text x="530" y="127" text-anchor="middle" font-size="10" fill="#374151">Source code &amp; config</text>
+  <text x="530" y="141" text-anchor="middle" font-size="10" fill="#374151">published/ CSV reports</text>
+  <text x="530" y="155" text-anchor="middle" font-size="10" fill="#374151">Auto-pushed by cron</text>
+
+  <!-- published/ -->
+  <rect x="445" y="200" width="170" height="76" rx="8" fill="#fff" stroke="#ea580c" stroke-width="1.8"/>
+  <rect x="445" y="200" width="170" height="26" rx="8" fill="#ea580c"/>
+  <rect x="445" y="214" width="170" height="12" fill="#ea580c"/>
+  <text x="530" y="217" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">published/</text>
+  <text x="530" y="237" text-anchor="middle" font-size="10" fill="#374151">covered_call_report_latest.csv</text>
+  <text x="530" y="251" text-anchor="middle" font-size="10" fill="#374151">live_overlay.json</text>
+  <text x="530" y="265" text-anchor="middle" font-size="10" fill="#374151">Served as static files</text>
+
+  <!-- Supabase -->
+  <rect x="445" y="310" width="170" height="90" rx="8" fill="#fff" stroke="#ea580c" stroke-width="1.8"/>
+  <rect x="445" y="310" width="170" height="26" rx="8" fill="#ea580c"/>
+  <rect x="445" y="324" width="170" height="12" fill="#ea580c"/>
+  <text x="530" y="327" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Supabase</text>
+  <text x="530" y="347" text-anchor="middle" font-size="10" fill="#374151">PostgreSQL database</text>
+  <text x="530" y="361" text-anchor="middle" font-size="10" fill="#374151">trade_history table</text>
+  <text x="530" y="375" text-anchor="middle" font-size="10" fill="#374151">P&amp;L, wins, open positions</text>
+  <text x="530" y="389" text-anchor="middle" font-size="10" fill="#374151">Anon key safe client-side</text>
+
+  <!-- Render Static Site -->
+  <rect x="665" y="90" width="160" height="76" rx="8" fill="#fff" stroke="#9333ea" stroke-width="1.8"/>
+  <rect x="665" y="90" width="160" height="26" rx="8" fill="#9333ea"/>
+  <rect x="665" y="104" width="160" height="12" fill="#9333ea"/>
+  <text x="745" y="107" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Render Static Site</text>
+  <text x="745" y="127" text-anchor="middle" font-size="10" fill="#374151">Serves index.html</text>
+  <text x="745" y="141" text-anchor="middle" font-size="10" fill="#374151">+ published/ files</text>
+  <text x="745" y="155" text-anchor="middle" font-size="10" fill="#374151">Auto-deploys on push</text>
+
+  <!-- Dashboard -->
+  <rect x="665" y="200" width="160" height="110" rx="8" fill="#fff" stroke="#9333ea" stroke-width="1.8"/>
+  <rect x="665" y="200" width="160" height="26" rx="8" fill="#9333ea"/>
+  <rect x="665" y="214" width="160" height="12" fill="#9333ea"/>
+  <text x="745" y="217" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Dashboard</text>
+  <text x="745" y="237" text-anchor="middle" font-size="10" fill="#374151">dashboard.xaviermarin.me</text>
+  <text x="745" y="251" text-anchor="middle" font-size="10" fill="#374151">Weekly Picks tab</text>
+  <text x="745" y="265" text-anchor="middle" font-size="10" fill="#374151">P&amp;L &amp; Trades tab</text>
+  <text x="745" y="279" text-anchor="middle" font-size="10" fill="#374151">Trade log modal</text>
+  <text x="745" y="293" text-anchor="middle" font-size="10" fill="#374151">Position sizing calc</text>
+
+  <!-- Arrows -->
+  <defs>
+    <marker id="arr-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#6366f1"/>
+    </marker>
+    <marker id="arr-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#16a34a"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#ea580c"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#9333ea"/>
+    </marker>
+  </defs>
+
+  <line x1="175" y1="128" x2="223" y2="128" stroke="#6366f1" stroke-width="2" marker-end="url(#arr-blue)"/>
+  <line x1="175" y1="238" x2="223" y2="185" stroke="#6366f1" stroke-width="2" marker-end="url(#arr-blue)"/>
+  <line x1="175" y1="340" x2="223" y2="165" stroke="#6366f1" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arr-blue)"/>
+  <line x1="175" y1="128" x2="210" y2="248" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr-blue)"/>
+  <line x1="395" y1="130" x2="443" y2="130" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+  <line x1="395" y1="248" x2="443" y2="240" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+  <line x1="395" y1="353" x2="663" y2="130" stroke="#16a34a" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arr-green)"/>
+  <line x1="615" y1="128" x2="663" y2="128" stroke="#ea580c" stroke-width="2" marker-end="url(#arr-orange)"/>
+  <line x1="615" y1="238" x2="663" y2="255" stroke="#ea580c" stroke-width="2" marker-end="url(#arr-orange)"/>
+  <line x1="615" y1="355" x2="663" y2="290" stroke="#ea580c" stroke-width="2" marker-end="url(#arr-orange)"/>
+  <line x1="663" y1="305" x2="617" y2="370" stroke="#9333ea" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arr-purple)"/>
+  <line x1="745" y1="166" x2="745" y2="198" stroke="#9333ea" stroke-width="2" marker-end="url(#arr-purple)"/>
+
+  <!-- Arrow labels -->
+  <rect x="183" y="116" width="36" height="14" rx="3" fill="#f8f9fa"/>
+  <text x="201" y="126" text-anchor="middle" font-size="9" fill="#6366f1">fetch</text>
+  <rect x="400" y="118" width="38" height="14" rx="3" fill="#f8f9fa"/>
+  <text x="419" y="128" text-anchor="middle" font-size="9" fill="#16a34a">git push</text>
+  <rect x="620" y="116" width="38" height="14" rx="3" fill="#f8f9fa"/>
+  <text x="639" y="126" text-anchor="middle" font-size="9" fill="#ea580c">deploy</text>
+  <rect x="618" y="340" width="40" height="14" rx="3" fill="#f8f9fa"/>
+  <text x="638" y="350" text-anchor="middle" font-size="9" fill="#ea580c">read/write</text>
+
+  <!-- Legend -->
+  <rect x="35" y="510" width="790" height="90" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="55" y="530" font-size="11" font-weight="600" fill="#374151">How it works (daily flow):</text>
+  <circle cx="65" cy="552" r="9" fill="#6366f1"/>
+  <text x="65" y="556" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">1</text>
+  <text x="82" y="556" font-size="10" fill="#374151">Render Cron fetches prices &amp; option chains from yfinance, scores 288 tickers</text>
+  <circle cx="65" cy="572" r="9" fill="#16a34a"/>
+  <text x="65" y="576" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">2</text>
+  <text x="82" y="576" font-size="10" fill="#374151">Results saved as CSV + JSON, git-pushed to GitHub → triggers Render static site redeploy</text>
+  <circle cx="65" cy="592" r="9" fill="#ea580c"/>
+  <text x="65" y="596" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">3</text>
+  <text x="82" y="596" font-size="10" fill="#374151">Dashboard loads CSV/JSON from published/, reads/writes trades directly to Supabase (PostgreSQL)</text>
+</svg>
