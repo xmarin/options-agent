@@ -1,31 +1,27 @@
 {
   "report_date": "2026-05-25",
   "best_trade": {
-    "ticker": "SNOW",
-    "reason": "Offers the highest return on capital (3.8%) and annual yield (3.47%) with solid delta and OTM premium combined with strong open interest and earnings safety. It balances income potential and liquidity in a neutral trend with moderate IV.",
-    "biggest_risk": "High RSI (78.1) indicating potential overbought conditions and moderate IV could lead to rapid premium decline if the stock price drops."
+    "ticker": "ARM",
+    "reason": "ARM offers the highest weekly return on capital (2.38%) and annual yield (2.17%) with a solid delta close to target, strong upward trend, and no earnings risk. Its IV percentile at 100% indicates premium-rich options, enhancing income potential.",
+    "biggest_risk": "High implied volatility and recent strong gains increase the risk of a pullback or volatility crush, which could reduce premium value or cause sharp price drops."
   },
-  "overall_summary": "This week\u2019s top candidates rank highly due to strong weekly income estimates, reasonable OTM strikes near optimal deltas, and healthy liquidity. QCOM and SNOW lead due to strong premiums and income yields, with SNOW having a higher ROI but slightly less volume. Some names like META and QQQ have lower premiums relative to capital required and smaller annual yields. SPY offers the lowest income and yield given its lower IV and delta. The main caution is elevated RSI levels and potential volatility that could impact option premiums.",
+  "overall_summary": "This week's top candidates show strong upward trends with healthy premiums and balanced risk profiles. ARM and AMD stand out for income potential and liquidity, while AMZN and ADBE have lower premiums and less favorable yields. The absence of imminent earnings reduces short-term risk for selected trades.",
   "top_10_notes": [
     {
-      "ticker": "QCOM",
-      "comment": "Ranked highly for strong premium and ROI with uptrend and low earnings risk, good IV percentile; solid volume and liquidity."
+      "ticker": "AMD",
+      "comment": "Strong trending stock with high implied volatility and solid premium; balanced risk due to no immediate earnings and healthy liquidity."
     },
     {
-      "ticker": "SNOW",
-      "comment": "Best return on capital and yield, good open interest, but slightly lower volume and higher RSI risk; neutral trend."
+      "ticker": "ARM",
+      "comment": "Highest return on capital and premium yield with rich IV; risk lies in extreme IV percentile and high volatility environment."
     },
     {
-      "ticker": "META",
-      "comment": "Lower yield and ROI; near-the-money strike with muted premium; neutral trend and earnings well after expiration."
+      "ticker": "AMZN",
+      "comment": "Lower premium and yield with neutral trend and low IV percentile, making it less attractive for aggressive income strategies."
     },
     {
-      "ticker": "QQQ",
-      "comment": "Minimal ROI and yield; good liquidity and volume but low IV and premium; bullish trend may support stability."
-    },
-    {
-      "ticker": "SPY",
-      "comment": "Lowest premium and return, but very strong liquidity; low volatility and risk, but limited income potential."
+      "ticker": "ADBE",
+      "comment": "Lower premium and return with neutral trend and moderate implied volatility; earnings are somewhat near but no risk flagged."
     }
   ]
 }
