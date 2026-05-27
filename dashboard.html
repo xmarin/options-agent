@@ -128,6 +128,14 @@
     .setup-notice { background: rgba(110,168,254,.08); border: 1px solid rgba(110,168,254,.25); border-radius: 14px; padding: 18px; margin-bottom: 18px; font-size: .92rem; line-height: 1.7; }
     .setup-notice code { background: var(--panel-3); padding: 2px 6px; border-radius: 4px; font-size: .85rem; }
     .setup-notice pre { background: var(--panel-3); padding: 12px; border-radius: 8px; margin-top: 8px; overflow-x: auto; font-size: .82rem; }
+
+    /* Auth */
+    .auth-btn { font-size: .85rem; padding: 8px 14px; }
+    .auth-btn.signed-in { color: var(--good); border-color: rgba(47,191,113,.4); }
+    .auth-wall { text-align: center; padding: 80px 20px; }
+    .auth-wall .lock-icon { font-size: 3rem; margin-bottom: 16px; }
+    .auth-wall h3 { font-size: 1.25rem; margin-bottom: 8px; }
+    .auth-wall p { color: var(--muted); margin-bottom: 24px; font-size: .95rem; }
   </style>
 </head>
 <body>
@@ -144,6 +152,7 @@
       <label for="reportSelect">Report:</label>
       <select id="reportSelect"></select>
       <button id="reloadBtn">Reload</button>
+      <button id="authBtn" class="auth-btn" style="display:none;">Sign In</button>
       <button class="log-btn" id="openLogBtn">+ Log Trade</button>
     </div>
   </div>
@@ -193,6 +202,17 @@
        TAB 2 — P&L & Trades
   ══════════════════════════════════════ -->
   <div id="tab-pnl" class="tab-panel">
+
+    <!-- Auth wall (shown when not signed in) -->
+    <div id="pnlAuthWall" class="auth-wall" style="display:none;">
+      <div class="lock-icon">🔒</div>
+      <h3>Sign in to view your trades</h3>
+      <p>Your trade history and P&amp;L data are private.</p>
+      <button class="log-btn" onclick="openLoginModal()">Sign In</button>
+    </div>
+
+    <!-- P&L content (shown when signed in) -->
+    <div id="pnlContent">
 
     <!-- Setup notice shown when Supabase isn't configured -->
     <div id="supabaseNotice" class="setup-notice" style="display:none;">
@@ -276,8 +296,29 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       </div>
     </div>
 
+    </div><!-- /pnlContent -->
   </div><!-- /tab-pnl -->
 </div><!-- /container -->
+
+<!-- ══════════════════════════════════════
+     Login Modal
+══════════════════════════════════════ -->
+<div id="loginModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:400px;">
+    <h2>Sign In</h2>
+    <p style="color:var(--muted);font-size:.9rem;margin-bottom:20px;">Your trade data is private. Sign in to view and log trades.</p>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div id="loginError" style="color:var(--bad);font-size:.85rem;margin-bottom:12px;display:none;"></div>
+    <button id="loginSubmitBtn" class="btn-save log-btn" style="width:100%;border-radius:12px;">Sign In</button>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════
      Trade Log Modal
@@ -379,6 +420,79 @@ create policy "Allow all" on public.trades for all using (true) with check (true
   let db = null;
   if (supabaseConfigured) {
     db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+
+  /* ═══════════════════════════════════════════
+     AUTH
+  ═══════════════════════════════════════════ */
+  let _session = null;
+
+  function openLoginModal() {
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('loginModal').classList.add('open');
+    setTimeout(() => document.getElementById('loginEmail').focus(), 100);
+  }
+  function closeLoginModal() { document.getElementById('loginModal').classList.remove('open'); }
+
+  document.getElementById('loginModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('loginModal')) closeLoginModal();
+  });
+
+  document.getElementById('loginPassword').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('loginSubmitBtn').click();
+  });
+
+  document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('loginSubmitBtn');
+    const errEl = document.getElementById('loginError');
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) { errEl.textContent = 'Please enter your email and password.'; errEl.style.display = 'block'; return; }
+    btn.textContent = 'Signing in…'; btn.disabled = true;
+    const { error } = await db.auth.signInWithPassword({ email, password });
+    btn.textContent = 'Sign In'; btn.disabled = false;
+    if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
+    closeLoginModal();
+  });
+
+  document.getElementById('authBtn').addEventListener('click', async () => {
+    if (_session) {
+      await db.auth.signOut();
+    } else {
+      openLoginModal();
+    }
+  });
+
+  async function initAuth() {
+    if (!db) return;
+    const { data: { session } } = await db.auth.getSession();
+    _session = session;
+    updateAuthUI();
+    db.auth.onAuthStateChange((_event, session) => {
+      _session = session;
+      updateAuthUI();
+      // When signing in while on P&L tab, refresh it
+      if (session) {
+        _pnlInitialized = false;
+        const pnlTabActive = document.getElementById('tab-pnl')?.classList.contains('active');
+        if (pnlTabActive) initPnLTab();
+      }
+    });
+  }
+
+  function updateAuthUI() {
+    const btn = document.getElementById('authBtn');
+    if (!btn || !supabaseConfigured) return;
+    btn.style.display = 'inline-block';
+    if (_session) {
+      btn.textContent = '✓ Sign Out';
+      btn.classList.add('signed-in');
+    } else {
+      btn.textContent = 'Sign In';
+      btn.classList.remove('signed-in');
+    }
   }
 
   const MANIFEST_URL    = `published/reports_manifest.json?t=${Date.now()}`;
@@ -594,6 +708,15 @@ create policy "Allow all" on public.trades for all using (true) with check (true
   async function initPnLTab() {
     if (_pnlInitialized) return;
     _pnlInitialized = true;
+
+    // Gate behind auth
+    if (supabaseConfigured && !_session) {
+      document.getElementById('pnlAuthWall').style.display = 'block';
+      document.getElementById('pnlContent').style.display = 'none';
+      return;
+    }
+    document.getElementById('pnlAuthWall').style.display = 'none';
+    document.getElementById('pnlContent').style.display = 'block';
 
     if (!supabaseConfigured) {
       document.getElementById('supabaseNotice').style.display = 'block';
@@ -887,10 +1010,12 @@ create policy "Allow all" on public.trades for all using (true) with check (true
 
   document.getElementById('openLogBtn').addEventListener('click', () => {
     if (!supabaseConfigured) { alert('Supabase is not configured. See the P&L & Trades tab for setup instructions.'); return; }
+    if (!_session) { openLoginModal(); return; }
     openModal();
   });
   document.getElementById('openLogBtn2').addEventListener('click', () => {
     if (!supabaseConfigured) { alert('Supabase is not configured. See the setup notice above for instructions.'); return; }
+    if (!_session) { openLoginModal(); return; }
     openModal();
   });
   document.getElementById('cancelTradeBtn').addEventListener('click', closeModal);
@@ -993,6 +1118,7 @@ create policy "Allow all" on public.trades for all using (true) with check (true
   }
 
   async function init() {
+    await initAuth();
     try {
       const manifest = await loadManifest();
       const sel = document.getElementById('reportSelect');
