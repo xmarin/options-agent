@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="18" fill="#1a4fa3"/>
+  <g fill="white">
+    <!-- Top petal -->
+    <ellipse cx="50" cy="18" rx="7" ry="14" transform="rotate(0 50 50) translate(0 -32)"/>
+    <!-- Bottom petal -->
+    <ellipse cx="50" cy="18" rx="7" ry="14" transform="rotate(180 50 50) translate(0 -32)"/>
+    <!-- Top-left arm -->
+    <path d="M50 50 C40 40 22 28 18 20 C24 18 32 28 50 50Z" opacity="0.95"/>
+    <!-- Top-right arm -->
+    <path d="M50 50 C60 40 78 28 82 20 C76 18 68 28 50 50Z" opacity="0.95"/>
+    <!-- Bottom-left arm -->
+    <path d="M50 50 C40 60 22 72 18 80 C24 82 32 72 50 50Z" opacity="0.95"/>
+    <!-- Bottom-right arm -->
+    <path d="M50 50 C60 60 78 72 82 80 C76 82 68 72 50 50Z" opacity="0.95"/>
+    <!-- Center -->
+    <circle cx="50" cy="50" r="5"/>
+  </g>
+</svg>

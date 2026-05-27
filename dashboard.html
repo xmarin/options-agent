@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Options Agent Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
@@ -153,7 +154,7 @@
       <select id="reportSelect"></select>
       <button id="reloadBtn">Reload</button>
       <button id="authBtn" class="auth-btn" style="display:none;">Sign In</button>
-      <button class="log-btn" id="openLogBtn">+ Log Trade</button>
+      <button class="log-btn" id="openLogBtn" style="display:none;">+ Log Trade</button>
     </div>
   </div>
 
@@ -289,7 +290,7 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     <div class="panel">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
         <h2 style="margin:0;">Trade History</h2>
-        <button class="log-btn" id="openLogBtn2">+ Log New Trade</button>
+        <button class="log-btn" id="openLogBtn2" style="display:none;">+ Log New Trade</button>
       </div>
       <div class="trades-table-wrap" id="tradesTableWrap">
         <p style="color:var(--muted);font-size:.9rem;">Loading trades…</p>
@@ -486,12 +487,15 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     const btn = document.getElementById('authBtn');
     if (!btn || !supabaseConfigured) return;
     btn.style.display = 'inline-block';
+    const logBtns = [document.getElementById('openLogBtn'), document.getElementById('openLogBtn2')];
     if (_session) {
       btn.textContent = '✓ Sign Out';
       btn.classList.add('signed-in');
+      logBtns.forEach(b => { if (b) b.style.display = 'inline-block'; });
     } else {
       btn.textContent = 'Sign In';
       btn.classList.remove('signed-in');
+      logBtns.forEach(b => { if (b) b.style.display = 'none'; });
     }
   }
 
