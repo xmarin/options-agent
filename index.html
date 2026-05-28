@@ -494,8 +494,8 @@ create policy "Allow all" on public.trades for all using (true) with check (true
   /* ═══════════════════════════════════════════
      CONFIG — injected by build_static.py
   ═══════════════════════════════════════════ */
-  const SUPABASE_URL      = '%%SUPABASE_URL%%';
-  const SUPABASE_ANON_KEY = '%%SUPABASE_ANON_KEY%%';
+  const SUPABASE_URL      = 'https://tmlpqjlnnsjbwyjvlmeo.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtbHBxamxubnNqYnd5anZsbWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NjcxNjMsImV4cCI6MjA5NTA0MzE2M30.2WwJLU3d-ZBVqfZkO3s8SFYplPSzDHRYokob-VqKHRE';
   const supabaseConfigured = SUPABASE_URL && !SUPABASE_URL.startsWith('%%') && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.startsWith('%%');
 
   let db = null;
