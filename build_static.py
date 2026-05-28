@@ -25,10 +25,13 @@ dashboard_src = dashboard_src.replace("%%SUPABASE_ANON_KEY%%", os.getenv("SUPABA
 # Also write to repo root so Render's staticPublishPath: . serves the updated dashboard
 (ROOT / "index.html").write_text(dashboard_src, encoding="utf-8")
 
-# Copy favicon
-favicon_src = ROOT / "favicon.svg"
-if favicon_src.exists():
-    shutil.copy2(favicon_src, SITE / "favicon.svg")
+# Copy favicons
+for favicon_file in ["favicon.ico", "favicon-32x32.png", "favicon-16x16.png",
+                     "apple-touch-icon.png", "android-chrome-192x192.png",
+                     "android-chrome-512x512.png", "favicon.svg"]:
+    src = ROOT / favicon_file
+    if src.exists():
+        shutil.copy2(src, SITE / favicon_file)
 
 target_published = SITE / "published"
 target_published.mkdir(parents=True, exist_ok=True)

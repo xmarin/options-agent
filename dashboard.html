@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Options Agent Dashboard</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
@@ -168,6 +171,16 @@
        TAB 1 — Weekly Picks (original)
   ══════════════════════════════════════ -->
   <div id="tab-picks" class="tab-panel active">
+
+    <!-- Auth wall for Weekly Picks -->
+    <div id="picksAuthWall" class="auth-wall" style="display:none;">
+      <div class="lock-icon">🔒</div>
+      <h3>Sign in to view weekly picks</h3>
+      <p>Covered call recommendations are private to your account.</p>
+      <button class="log-btn" onclick="openLoginModal()">Sign In</button>
+    </div>
+
+    <div id="picksContent">
     <div class="panel">
       <h2>Best Trade of the Week</h2>
       <div id="bestTrade" class="summary-box">Loading…</div>
@@ -197,6 +210,7 @@
       </ul>
       <div class="small-note">Always verify the exact option symbol, strike, and expiration before placing any order.</div>
     </div>
+    </div><!-- /picksContent -->
   </div>
 
   <!-- ══════════════════════════════════════
@@ -488,14 +502,20 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     if (!btn || !supabaseConfigured) return;
     btn.style.display = 'inline-block';
     const logBtns = [document.getElementById('openLogBtn'), document.getElementById('openLogBtn2')];
+    const picksWall    = document.getElementById('picksAuthWall');
+    const picksContent = document.getElementById('picksContent');
     if (_session) {
       btn.textContent = '✓ Sign Out';
       btn.classList.add('signed-in');
       logBtns.forEach(b => { if (b) b.style.display = 'inline-block'; });
+      if (picksWall)    picksWall.style.display    = 'none';
+      if (picksContent) picksContent.style.display = 'block';
     } else {
       btn.textContent = 'Sign In';
       btn.classList.remove('signed-in');
       logBtns.forEach(b => { if (b) b.style.display = 'none'; });
+      if (picksWall)    picksWall.style.display    = 'block';
+      if (picksContent) picksContent.style.display = 'none';
     }
   }
 
