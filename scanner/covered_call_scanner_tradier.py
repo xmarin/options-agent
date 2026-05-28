@@ -563,6 +563,14 @@ def scan_one_ticker(ticker: str, earnings_map: dict, spy_closes: list[float] | N
     return results
 
 
+def load_owned_tickers() -> set[str]:
+    """Load tickers from data/owned_tickers.txt (written by import_positions.py)."""
+    path = Path("data/owned_tickers.txt")
+    if not path.exists():
+        return set()
+    return {t.strip().upper() for t in path.read_text(encoding="utf-8").splitlines() if t.strip()}
+
+
 def apply_final_scoring(df: pd.DataFrame) -> pd.DataFrame:
     # Cross-scan IV percentile (how this option ranks vs others in today's scan)
     if "Current IV" in df.columns:
@@ -602,6 +610,16 @@ def apply_final_scoring(df: pd.DataFrame) -> pd.DataFrame:
     trend_component = df["Trend"].map({"up": 1.0, "neutral": 0.5, "down": 0.0}).fillna(0.5)
     score_component = df["Score"].fillna(0)
 
+    # Owned-position bonus: stocks you already own need no capital to buy —
+    # selling a call against them is immediately actionable.
+    owned_tickers = load_owned_tickers()
+    df["Owned Position"] = df["Ticker"].str.upper().isin(owned_tickers)
+    owned_component = df["Owned Position"].astype(float)
+    owned_count = int(owned_component.sum())
+    if owned_count:
+        print(f"  📌 Owned-position bonus applied to {owned_count} ticker(s): "
+              f"{', '.join(df.loc[df['Owned Position'], 'Ticker'].tolist())}")
+
     core_weight_total = (
         STRATEGY_CONFIG["premium_weight"]
         + STRATEGY_CONFIG["delta_weight"]
@@ -618,6 +636,7 @@ def apply_final_scoring(df: pd.DataFrame) -> pd.DataFrame:
         + trend_component   * STRATEGY_CONFIG.get("trend_weight", 0.0)
         + rsi_component     * STRATEGY_CONFIG.get("rsi_weight", 0.0)
         + beta_component    * STRATEGY_CONFIG.get("beta_weight", 0.0)
+        + owned_component   * STRATEGY_CONFIG.get("owned_weight", 0.15)
     )
 
     df["Final Score"] = final_score.round(4)

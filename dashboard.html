@@ -141,6 +141,15 @@
     .auth-wall h3 { font-size: 1.25rem; margin-bottom: 8px; }
     .auth-wall p { color: var(--muted); margin-bottom: 24px; font-size: .95rem; }
 
+    /* ── Owned position badge on pick cards ── */
+    .owned-banner { background: rgba(47,191,113,.12); border: 1px solid rgba(47,191,113,.3); border-radius: 10px; padding: 9px 13px; margin-bottom: 12px; font-size:.85rem; color: #2fbf71; font-weight: 600; display:flex; align-items:center; gap:8px; }
+    .stock-card.is-owned { border-color: rgba(47,191,113,.45); box-shadow: 0 0 0 2px rgba(47,191,113,.12); }
+    /* ── Income goal tracker ── */
+    .progress-bar-track { background: var(--panel-3); border-radius: 8px; height: 14px; overflow: hidden; margin-bottom: 18px; }
+    .progress-bar-fill  { height: 100%; border-radius: 8px; transition: width .6s ease; background: var(--good); }
+    .progress-bar-fill.over { background: var(--accent); }
+    .monthly-table th, .monthly-table td { padding: 7px 12px; }
+    .monthly-table th { color: var(--muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.04em; }
     /* ── My Positions tab ── */
     .pos-live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--good); margin-right: 6px; vertical-align: middle; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
@@ -269,6 +278,24 @@ SUPABASE_ANON_KEY=&lt;your-anon-key&gt;</pre>
 alter table public.trades enable row level security;
 create policy "Allow all" on public.trades for all using (true) with check (true);</pre>
       Until then, P&amp;L stats are read from the published <code>trade_history.json</code> file.
+    </div>
+
+    <!-- ── Monthly Income Goal Tracker ── -->
+    <div class="panel" id="incomeGoalPanel">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+        <h2>Monthly Income Goal</h2>
+        <span style="color:var(--muted);font-size:.85rem;">Target: <strong style="color:var(--text);">$4,000 / month</strong></span>
+      </div>
+      <div class="stats-row" style="margin-bottom:12px;">
+        <div class="stat-card"><div class="val" id="ig-prem">—</div><div class="lbl">Premium Collected (this month)</div></div>
+        <div class="stat-card"><div class="val" id="ig-pnl">—</div><div class="lbl">Realized P&amp;L (this month)</div></div>
+        <div class="stat-card"><div class="val" id="ig-pct">—</div><div class="lbl">Goal Progress</div></div>
+        <div class="stat-card"><div class="val" id="ig-remaining">—</div><div class="lbl">Still Needed</div></div>
+      </div>
+      <div class="progress-bar-track">
+        <div id="igBar" class="progress-bar-fill" style="width:0%;"></div>
+      </div>
+      <div id="incomeMonthlyTable"></div>
     </div>
 
     <!-- Summary stat cards -->
@@ -546,16 +573,31 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     }
   });
 
+  async function loadMyPositions() {
+    if (!db || !_session) return;
+    try {
+      const { data, error } = await db.from('positions').select('ticker,shares,avg_cost,total_cost');
+      if (!error && data) {
+        _myPositions = new Map(data.map(p => [p.ticker.toUpperCase(), p]));
+      }
+    } catch(e) {}
+  }
+
   async function initAuth() {
     if (!db) return;
     const { data: { session } } = await db.auth.getSession();
     _session = session;
+    if (session) await loadMyPositions();
     updateAuthUI();
-    db.auth.onAuthStateChange((_event, session) => {
+    db.auth.onAuthStateChange(async (_event, session) => {
       _session = session;
+      if (session) {
+        await loadMyPositions(); // load before updating UI so cards render annotated
+      } else {
+        _myPositions = new Map();
+      }
       updateAuthUI();
       if (session) {
-        // Refresh whichever data tab is currently active
         _pnlInitialized = false;
         _positionsInitialized = false;
         const pnlTabActive = document.getElementById('tab-pnl')?.classList.contains('active');
@@ -602,6 +644,7 @@ create policy "Allow all" on public.trades for all using (true) with check (true
   let _currentReportRows = [];   // rows from last loaded CSV scan
   let _pnlChart = null;
   let _positionsInitialized = false;
+  let _myPositions = new Map(); // ticker → {shares, avg_cost, total_cost}
 
   /* ═══════════════════════════════════════════
      UTILITIES
@@ -757,10 +800,18 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       const hvRank       = toNum(row['HV Rank']);
       const rsi          = toNum(row['RSI']);
       const beta         = toNum(row['Beta']);
+      const ownedPos   = _myPositions.get(ticker);
+      const ownedShares = ownedPos?.shares || 0;
+      const ownedContracts = Math.floor(ownedShares / 100);
+      const contractsLabel = ownedContracts > 0 ? ownedContracts : 1;
+
       const card = document.createElement('div');
-      card.className = 'stock-card';
+      card.className = 'stock-card' + (ownedPos ? ' is-owned' : '');
+      const ownedBanner = ownedPos ? `
+        <div class="owned-banner">✓ You own ${ownedShares.toLocaleString()} shares → sell ${ownedContracts} contract${ownedContracts !== 1 ? 's' : ''} now · no capital needed</div>` : '';
       card.innerHTML = `
-        <div class="rank">#${idx+1} candidate</div>
+        ${ownedBanner}
+        <div class="rank">#${idx+1} candidate${ownedPos ? ' 📌' : ''}</div>
         <div class="ticker">${ticker||'—'}</div>
         <div class="score">Final Score ${fmt(row['Final Score'],2)}</div>
         <div class="section-box"><h3>1. Stock Info</h3><div class="stats">
@@ -776,7 +827,7 @@ create policy "Allow all" on public.trades for all using (true) with check (true
         </div></div>
         <div class="section-box"><h3>2. Exact Call To Sell</h3><div class="order-lines">
           <div class="order-line"><strong>Action:</strong> Sell to Open</div>
-          <div class="order-line"><strong>Contracts:</strong> 1</div>
+          <div class="order-line"><strong>Contracts:</strong> ${contractsLabel}${ownedPos && ownedContracts > 1 ? ` <span style="color:var(--good);font-size:.8rem;">(${ownedContracts} available)</span>` : ''}</div>
           <div class="order-line"><strong>Underlying:</strong> ${ticker}</div>
           <div class="order-line"><strong>Expiration:</strong> ${row['Expiration']||'—'}</div>
           <div class="order-line"><strong>Strike:</strong> ${fmt(row['Strike'],2)}</div>
@@ -824,6 +875,7 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     }
 
     const trades = await loadAllTrades();
+    renderIncomeGoalTracker(trades);
     renderPnLStats(trades);
     renderPnLChart(trades);
     renderBestTickersTable(trades);
@@ -876,6 +928,102 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     }
 
     return trades;
+  }
+
+  function renderIncomeGoalTracker(trades) {
+    const GOAL = 4000;
+    const now  = new Date();
+    const thisYear  = now.getFullYear();
+    const thisMonth = now.getMonth(); // 0-based
+
+    // Helper: parse "YYYY-MM-DD" → {year, month} (0-based month)
+    function ym(dateStr) {
+      if (!dateStr) return null;
+      const d = new Date(dateStr + 'T12:00:00');
+      return isNaN(d) ? null : { year: d.getFullYear(), month: d.getMonth() };
+    }
+
+    // Accumulate per-month data
+    const monthly = {}; // key "YYYY-MM" → {prem, pnl}
+    for (const t of trades) {
+      // Premium collected → when trade was opened (transaction_date)
+      const openYM = ym(t.transaction_date);
+      if (openYM && t.total_premium != null) {
+        const k = `${openYM.year}-${String(openYM.month+1).padStart(2,'0')}`;
+        monthly[k] = monthly[k] || {prem:0, pnl:0};
+        monthly[k].prem += (t.total_premium || 0);
+      }
+      // Realized P&L → when trade closed (close_date)
+      const closeYM = ym(t.close_date);
+      if (closeYM && t.total_pnl != null) {
+        const k = `${closeYM.year}-${String(closeYM.month+1).padStart(2,'0')}`;
+        monthly[k] = monthly[k] || {prem:0, pnl:0};
+        monthly[k].pnl += (t.total_pnl || 0);
+      }
+    }
+
+    // Current month key
+    const thisKey = `${thisYear}-${String(thisMonth+1).padStart(2,'0')}`;
+    const cur = monthly[thisKey] || {prem:0, pnl:0};
+    const pct = Math.min(cur.prem / GOAL * 100, 200); // cap bar at 200%
+    const remaining = Math.max(0, GOAL - cur.prem);
+
+    // Update stat cards
+    const setVal = (id, html, cls) => {
+      const el = document.getElementById(id); if (!el) return;
+      el.innerHTML = html;
+      el.className = 'val' + (cls ? ' ' + cls : '');
+    };
+    setVal('ig-prem', `$${cur.prem.toLocaleString(undefined,{maximumFractionDigits:0})}`,
+      cur.prem >= GOAL ? 'good' : cur.prem >= GOAL * 0.5 ? '' : '');
+    setVal('ig-pnl',  `${cur.pnl >= 0 ? '+' : ''}$${Math.abs(cur.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}`,
+      cur.pnl >= 0 ? 'good' : 'bad');
+    setVal('ig-pct',  `${pct.toFixed(0)}%`, pct >= 100 ? 'good' : '');
+    setVal('ig-remaining', remaining > 0 ? `$${remaining.toLocaleString(undefined,{maximumFractionDigits:0})}` : '✓ Goal reached!',
+      remaining === 0 ? 'good' : '');
+
+    // Progress bar
+    const bar = document.getElementById('igBar');
+    if (bar) {
+      bar.style.width = `${Math.min(pct, 100)}%`;
+      bar.className = 'progress-bar-fill' + (pct >= 100 ? ' over' : '');
+    }
+
+    // Monthly table — last 6 months sorted newest-first
+    const sortedKeys = Object.keys(monthly).sort().reverse().slice(0, 6);
+    const container = document.getElementById('incomeMonthlyTable');
+    if (!container) return;
+    if (!sortedKeys.length) { container.innerHTML = ''; return; }
+
+    const monthLabel = key => {
+      const [y, m] = key.split('-');
+      return new Date(+y, +m-1, 1).toLocaleString('default', {month:'long', year:'numeric'});
+    };
+    container.innerHTML = `
+      <h3 style="margin-bottom:10px;color:var(--muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;">Last 6 Months</h3>
+      <div class="trades-table-wrap">
+        <table class="monthly-table" style="width:100%;">
+          <thead><tr>
+            <th>Month</th>
+            <th>Premium Collected</th>
+            <th>Realized P&amp;L</th>
+            <th>vs $4k Goal</th>
+          </tr></thead>
+          <tbody>${sortedKeys.map(k => {
+            const d = monthly[k];
+            const goalPct = (d.prem / GOAL * 100).toFixed(0);
+            const goalCls = d.prem >= GOAL ? 'pnl-positive' : d.prem >= GOAL*0.5 ? '' : 'pnl-negative';
+            const pnlCls  = d.pnl  >= 0   ? 'pnl-positive' : 'pnl-negative';
+            const isCurrent = k === thisKey;
+            return `<tr style="${isCurrent ? 'background:rgba(110,168,254,.06);' : ''}">
+              <td><strong>${monthLabel(k)}${isCurrent ? ' <span style="color:var(--accent);font-size:.75rem;">← current</span>' : ''}</strong></td>
+              <td>$${d.prem.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
+              <td><span class="${pnlCls}">${d.pnl >= 0 ? '+' : ''}$${Math.abs(d.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</span></td>
+              <td><span class="${goalCls}">${goalPct}%</span></td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>`;
   }
 
   function renderPnLStats(trades) {

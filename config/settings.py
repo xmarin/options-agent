@@ -38,6 +38,7 @@ STRATEGY_TARGETS = {
         "trend_weight": 0.04,
         "rsi_weight": 0.04,      # RSI 45-65 sweet spot
         "beta_weight": 0.02,     # mild beta preference
+        "owned_weight": 0.15,    # bonus for stocks you already own (no capital needed)
     },
     # Balanced: well-rounded, moderate delta, good liquidity
     "balanced": {
@@ -54,6 +55,7 @@ STRATEGY_TARGETS = {
         "trend_weight": 0.05,
         "rsi_weight": 0.03,
         "beta_weight": 0.01,
+        "owned_weight": 0.15,
     },
     # Conservative: lower delta, high OTM, low beta, max protection
     "conservative": {
@@ -70,5 +72,6 @@ STRATEGY_TARGETS = {
         "trend_weight": 0.05,
         "rsi_weight": 0.04,
         "beta_weight": 0.03,     # higher weight: avoid high-beta stocks
+        "owned_weight": 0.15,
     },
 }

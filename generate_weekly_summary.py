@@ -49,6 +49,14 @@ def update_manifest():
     print(f"Saved manifest: {manifest_path}")
 
 
+def load_owned_tickers() -> list[str]:
+    """Load owned tickers from data/owned_tickers.txt (written by import_positions.py)."""
+    path = Path("data/owned_tickers.txt")
+    if not path.exists():
+        return []
+    return [t.strip().upper() for t in path.read_text(encoding="utf-8").splitlines() if t.strip()]
+
+
 def main():
     if not LATEST_CSV.exists():
         raise FileNotFoundError(f"Missing latest report: {LATEST_CSV}")
@@ -57,6 +65,21 @@ def main():
     top10 = df.head(10).fillna("").to_dict(orient="records")
     today_str = date.today().isoformat()
 
+    # Build owned-positions context so the AI can personalise its recommendation
+    owned_tickers = load_owned_tickers()
+    top10_tickers = [str(r.get("Ticker", "")).upper() for r in top10]
+    owned_in_top10     = [t for t in owned_tickers if t in top10_tickers]
+    owned_not_in_top10 = [t for t in owned_tickers if t not in top10_tickers]
+
+    owned_context = ""
+    if owned_tickers:
+        owned_context = f"\n\nINVESTOR PORTFOLIO CONTEXT:\nThe investor currently owns: {', '.join(owned_tickers)}. For these stocks they can sell covered calls immediately — no additional capital needed to buy shares."
+        if owned_in_top10:
+            owned_context += f"\nOf this week's top 10, the investor already owns: {', '.join(owned_in_top10)}. These are immediately actionable and should be highlighted."
+        if owned_not_in_top10:
+            owned_context += f"\nThe investor also owns {', '.join(owned_not_in_top10)} which did not rank in the top 10 this week — mention this briefly."
+        owned_context += "\nWhen choosing the best trade, strongly prefer owned stocks unless a non-owned stock is dramatically better on all metrics."
+
     client = OpenAI()
 
     prompt = f"""
@@ -64,12 +87,13 @@ You are an options income analyst helping choose ONE weekly covered-call trade.
 
 I am providing the top 10 unique-stock candidates from a scanner.
 Each row is already the best call contract for that stock.
+{owned_context}
 
 Your tasks:
 1. Explain why these names ranked highly this week.
 2. Point out any names that look dangerous or less desirable.
-3. Choose ONE best trade of the week.
-4. Give a concise reason for the choice.
+3. Choose ONE best trade of the week — prefer stocks the investor already owns.
+4. Give a concise reason for the choice, mentioning if it is an owned stock.
 5. Mention the biggest risk of that choice.
 
 Return ONLY valid JSON.
