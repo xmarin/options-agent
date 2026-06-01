@@ -654,6 +654,10 @@ def main():
     print("Fetching SPY benchmark history for beta calculation...")
     _SPY_CLOSES = get_price_history("SPY", lookback_days=365)
     print(f"  SPY history: {len(_SPY_CLOSES)} days loaded")
+    if len(_SPY_CLOSES) == 0:
+        print("  ⚠️  WARNING: SPY history is empty — markets may not be open yet or yfinance is unreachable.")
+        print("  Beta scoring will be skipped this run (all beta scores = 0.5).")
+        print("  If this repeats, check that the cron runs after 13:30 UTC (9:30 AM ET).")
 
     print("Loading earnings calendar...")
     earnings_map = get_earnings_map(days_ahead=90)
