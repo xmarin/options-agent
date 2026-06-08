@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -59,7 +60,16 @@ def load_owned_tickers() -> list[str]:
 
 def main():
     if not LATEST_CSV.exists():
-        raise FileNotFoundError(f"Missing latest report: {LATEST_CSV}")
+        print(f"No latest report found at {LATEST_CSV} — scanner may not have run yet or found no matches. Skipping summary generation.")
+        sys.exit(0)
+
+    # If the scanner ran today but produced no new dated CSV, skip to avoid generating
+    # a stale summary from last week's data.
+    today_csv = PUBLISHED_DIR / f"covered_call_report_{date.today().isoformat()}.csv"
+    if not today_csv.exists():
+        print(f"No report for today ({date.today().isoformat()}) found. Scanner likely produced no matches this week.")
+        print("Skipping summary generation — last week's summary remains current.")
+        sys.exit(0)
 
     df = pd.read_csv(LATEST_CSV)
     top10 = df.head(10).fillna("").to_dict(orient="records")

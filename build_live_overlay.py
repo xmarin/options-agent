@@ -1,6 +1,7 @@
 import json
 import math
 import os
+import sys
 import warnings
 from pathlib import Path
 from typing import Any
@@ -314,7 +315,8 @@ def choose_rows_for_overlay(df: pd.DataFrame, limit: int) -> pd.DataFrame:
 
 def main() -> None:
     if not LATEST_REPORT.exists():
-        raise FileNotFoundError(f"Missing {LATEST_REPORT}")
+        print(f"No latest report found at {LATEST_REPORT} — skipping build_live_overlay.")
+        sys.exit(0)
 
     PUBLISHED_DIR.mkdir(parents=True, exist_ok=True)
 

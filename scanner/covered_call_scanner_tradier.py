@@ -675,14 +675,14 @@ def main():
 
     df = pd.DataFrame(all_rows)
     if df.empty:
-        print("\nNo matches found. Loosen filters or scan more tickers.")
-        print("Suggested loosening examples:")
-        print("  export MIN_BID=1.50")
-        print("  export MAX_DELTA=0.40")
-        print("  export MIN_OTM_PCT=0.01")
-        print("  export MIN_VOLUME=100")
-        print("  export MIN_OPEN_INTEREST=200")
-        raise RuntimeError("Scanner produced no matches.")
+        print("\nNo matches found this week — market conditions may not meet current filter thresholds.")
+        print("Current filters:")
+        print(f"  MIN_BID={MIN_BID}  MAX_DELTA={MAX_DELTA}  MIN_OTM_PCT={MIN_OTM_PCT}")
+        print(f"  MIN_VOLUME={MIN_VOLUME}  MIN_OPEN_INTEREST={MIN_OPEN_INTEREST}  MAX_SPREAD_PCT={MAX_SPREAD_PCT}")
+        print("\nTo loosen filters, set environment variables on Render:")
+        print("  MIN_BID=1.00  MIN_VOLUME=50  MIN_OPEN_INTEREST=100")
+        print("\nExiting cleanly (no crash) — no CSV written this week.")
+        sys.exit(0)
 
     df = apply_final_scoring(df)
     df = df.sort_values(

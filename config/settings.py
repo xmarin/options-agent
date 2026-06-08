@@ -12,9 +12,9 @@ DTE_MIN = int(os.getenv("DTE_MIN", "3"))
 DTE_MAX = int(os.getenv("DTE_MAX", "10"))
 
 # Liquidity filters
-MIN_VOLUME = int(os.getenv("MIN_VOLUME", "250"))
-MIN_OPEN_INTEREST = int(os.getenv("MIN_OPEN_INTEREST", "500"))
-MAX_SPREAD_PCT = float(os.getenv("MAX_SPREAD_PCT", "0.08"))
+MIN_VOLUME = int(os.getenv("MIN_VOLUME", "100"))
+MIN_OPEN_INTEREST = int(os.getenv("MIN_OPEN_INTEREST", "200"))
+MAX_SPREAD_PCT = float(os.getenv("MAX_SPREAD_PCT", "0.12"))
 
 # Strategy behavior
 DEFAULT_CC_STRATEGY_MODE = os.getenv("DEFAULT_CC_STRATEGY_MODE", "balanced").strip().lower()

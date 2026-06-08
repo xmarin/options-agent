@@ -1,4 +1,5 @@
 import json
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -231,7 +232,8 @@ def build_summary(records):
 
 def main():
     if not CSV_PATH.exists():
-        raise FileNotFoundError(f"Missing trade history CSV: {CSV_PATH}")
+        print(f"No trade history CSV found at {CSV_PATH} — skipping build_trade_history_json.")
+        sys.exit(0)
 
     PUBLISHED_DIR.mkdir(parents=True, exist_ok=True)
 
