@@ -1,35 +1,47 @@
 {
   "report_date": "2026-06-08",
   "best_trade": {
-    "ticker": "HIMS",
-    "reason": "Preferred the owned stock HIMS for covered call due to immediate ability to sell calls without additional capital, maintaining portfolio synergy and risk management despite it not ranking in the top 10 this week. This aligns with the strong preference for owned stocks unless a non-owned stock is dramatically better.",
-    "biggest_risk": "Potential for accelerated assignment if the stock price surges above the strike, limiting upside potential and requiring re-establishing the position."
+    "ticker": "NFLX",
+    "reason": "Although NFLX is not in the top 10 candidates this week, the investor owns NFLX shares and can immediately sell covered calls without additional capital, aligning with the preference for owned positions. This reduces execution complexity and capital risk compared to buying new shares in other stocks. NFLX's known position allows the investor to generate immediate income from covered calls while managing risk effectively.",
+    "biggest_risk": "The primary risk is that the stock price may rise significantly above the strike price, resulting in assignment and potential loss of future upside gains beyond the strike."
   },
-  "overall_summary": "This week's top candidates rank highly mainly due to their attractive weekly premiums, moderate out-of-the-money (OTM) positions providing buffer against assignment, decent deltas targeting income and risk control, and solid liquidity ensuring easy execution. Most display balanced scores combining premium and risk factors. The investor\u2019s owned stocks HIMS and NFLX remain important for preferred strategy even though they didn't make the top 10 list, ensuring covered call deployment without new capital and maintaining portfolio alignment.",
+  "overall_summary": "Top candidates rank highly due to good premium yields, liquidity, and positive technical trends, with most showing low earnings risk this week. MU and ORCL lead in premium and return metrics but require new capital and are not owned. Stocks like PANW and SPY offer very low returns and thus are less attractive. The investor currently owns HIMS and NFLX which are not in this top scan, suggesting a tradeoff between immediate high yield versus simplicity and capital usage. Prefer owned stocks unless the new stock is considerably better on all counts.",
   "top_10_notes": [
     {
-      "ticker": "LLY",
-      "comment": "Strong price trend with high liquidity and balanced risk-return profile, no earnings this week reduces risk. Expensive capital requirement but solid annual yield."
+      "ticker": "MU",
+      "comment": "Ranks highest on premium and return but requires a large capital outlay and is not owned. Trend is up and earnings risk is low."
     },
     {
-      "ticker": "INTC",
-      "comment": "Highest annual yield and ROC, but slightly downward trend and nearing earnings in 45 days. Moderately high IV implies pricing premium but some risk of volatility."
+      "ticker": "ORCL",
+      "comment": "Strong returns and liquidity with minimal earnings risk, but is not owned, requiring new capital."
+    },
+    {
+      "ticker": "NOW",
+      "comment": "Good trend and liquidity but lower annual yield and option premium; not owned."
+    },
+    {
+      "ticker": "SNOW",
+      "comment": "High trend strength but lower liquidity and annual yield; not owned."
     },
     {
       "ticker": "QQQ",
-      "comment": "Good liquidity and balanced premium with low assignment risk. Neutral trend and relatively lower IV make it a stable choice but not owned."
+      "comment": "Low return on capital and neutral trend; not owned and lower IV percentile."
     },
     {
-      "ticker": "CRM",
-      "comment": "Moderate ROC and premium, with decent liquidity but neutral to slightly negative recent returns. No earnings soon, but less attractive premium score."
+      "ticker": "NVDA",
+      "comment": "Neutral trend and near earnings date but low premium and return; not owned."
+    },
+    {
+      "ticker": "QCOM",
+      "comment": "Moderate returns and liquidity but neutral trend; not owned."
     },
     {
       "ticker": "SPY",
-      "comment": "Very liquid and low IV percentile, but lowest weekly return and conservative premium scores. Stable but less income-focused."
+      "comment": "Very low return on capital and IV percentile, despite good liquidity; not owned."
     },
     {
-      "ticker": "AVGO",
-      "comment": "High IV and high HV rank indicating volatility risk; lower delta and OTM reduce assignment risk but recent downward trend and lower liquidity scores caution for selectivity."
+      "ticker": "PANW",
+      "comment": "High trend but very low returns and liquidity; not owned."
     }
   ]
 }
