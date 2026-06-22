@@ -2,18 +2,30 @@
   "report_date": "2026-06-22",
   "best_trade": {
     "ticker": "HIMS",
-    "reason": "Although HIMS and NFLX did not rank in the top 10 this week, the investor owns these stocks and can sell covered calls immediately without additional capital. Prioritizing owned stocks is recommended unless a non-owned stock is vastly superior on all metrics, which is not the case here.",
-    "biggest_risk": "Potential assignment if the stock price rises above the strike price, limiting upside gains."
+    "reason": "Although HIMS does not appear in the top 10 this week, it is owned by the investor and can offer immediate covered call selling without additional capital. Given the scanner's focus on non-owned stocks, none in the top 10 dramatically outperform on all metrics compared to owned stocks. Prioritizing owned positions minimizes risk and maximizes capital efficiency.",
+    "biggest_risk": "The primary risk is potential assignment if the stock price rises sharply above the strike, limiting upside potential and forcing sale of the shares."
   },
-  "overall_summary": "Top candidates this week rank highly due to attractive weekly income, solid return on capital, good liquidity, and moderate risk profiles. INTC leads with the highest return on capital and strong technical indicators but requires significant capital and is not currently owned. MCHP shows moderate returns and strong trend but is also not owned. Prioritizing owned stocks like HIMS or NFLX remains preferable given immediate covered call write ability.",
+  "overall_summary": "This week's top 10 covered call candidates show strong premiums and balanced risk profiles, mostly on technology and semiconductor stocks with upward trends. ARM and INTC lead with high returns and liquidity but are not owned. The investor's owned stocks, HIMS and NFLX, though not in top 10 this week, remain preferred for covered calls to avoid additional capital outlay. Caution is due for high beta and high IV names like ARM due to volatility risk.",
   "top_10_notes": [
     {
+      "ticker": "ARM",
+      "comment": "Ranks highest with strong premium and return but very high beta (3.689) and IV percentile at 100% suggest significant volatility risk."
+    },
+    {
       "ticker": "INTC",
-      "comment": "Ranks highest in return on capital and volume with strong price trend; moderate earnings risk with earnings after expiration."
+      "comment": "Good liquidity and balanced metrics with no earnings risk this week; solid premium but not owned by investor."
     },
     {
       "ticker": "MCHP",
-      "comment": "Stable uptrend and good liquidity with lower premium; no earnings risk this week."
+      "comment": "Moderate premium and return, reasonable liquidity but lower IV percentile; safer but less income potential."
+    },
+    {
+      "ticker": "AMD",
+      "comment": "Lower return on capital and premium; good liquidity but higher capital requirement; no earnings risk this week."
+    },
+    {
+      "ticker": "GOOGL",
+      "comment": "Low return on capital and premium; neutral trend and low IV percentile indicate lower income opportunity and less volatility risk."
     }
   ]
 }
