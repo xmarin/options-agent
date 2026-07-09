@@ -22,7 +22,10 @@ LOCAL_PUBLISHED_DIR = Path("published")
 def run(cmd, cwd=None):
     printable = " ".join(cmd).replace(GITHUB_TOKEN, "***REDACTED***")
     print("Running:", printable)
-    subprocess.run(cmd, check=True, cwd=cwd)
+    result = subprocess.run(cmd, cwd=cwd)
+    if result.returncode != 0:
+        # Raise without the raw command so the token never appears in tracebacks/logs
+        raise RuntimeError(f"Command failed with exit code {result.returncode}: {printable}")
 
 def main():
     if not LOCAL_PUBLISHED_DIR.exists():
