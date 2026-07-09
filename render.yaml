@@ -21,5 +21,6 @@ services:
       python3 generate_weekly_summary.py && \
       python3 build_trade_history_json.py && \
       python3 build_live_overlay.py && \
+      python3 build_picks_json.py && \
       python3 publish_reports_to_github.py
     schedule: "0 14 * * 1"
