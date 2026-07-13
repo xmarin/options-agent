@@ -353,6 +353,9 @@ def supabase_insert(table: str, records: list[dict], token: str,
                     on_conflict: str | None = None) -> None:
     """Insert records into Supabase table. If on_conflict is given, upsert."""
     clean = [{k: v for k, v in r.items() if not k.startswith('_')} for r in records]
+    # PostgREST requires identical keys on every row in a bulk insert
+    all_keys = set().union(*(r.keys() for r in clean)) if clean else set()
+    clean = [{k: r.get(k) for k in all_keys} for r in clean]
     url   = f"{SUPABASE_URL}/rest/v1/{table}"
     prefer = 'return=minimal'
     if on_conflict:
