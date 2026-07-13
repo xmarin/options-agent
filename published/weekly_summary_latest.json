@@ -1,51 +1,51 @@
 {
   "report_date": "2026-07-13",
   "best_trade": {
-    "ticker": "HIMS",
-    "reason": "Although HIMS and NFLX are not in this week\u2019s top 10, the investor owns HIMS and NFLX, which allows selling covered calls immediately without capital outlay. Prefer owned stocks for income trades unless others are dramatically better on all metrics. Since the top 10 list does not include HIMS or NFLX and none are dramatically better in terms of return on capital, liquidity, or premium, HIMS is recommended for a weekly covered call to capitalize on ownership and immediate income opportunity.",
-    "biggest_risk": "Stock price movement above the call strike, leading to assignment and potential loss of shares if the investor wants to retain them."
+    "ticker": "SPCX",
+    "reason": "SPCX is the only top 10 candidate stock already owned by the investor, making it immediately actionable with no new capital required. It offers a strong delta (0.322) and a solid return on capital (1.75% weekly). The option trade has excellent liquidity with very high volume and open interest and no earnings risk, making it a balanced and reliable weekly covered call.",
+    "biggest_risk": "The stock's trend is unknown, which introduces some uncertainty about price movement direction. Also, assignment at the strike price will cap upside if SPCX rallies above $145."
   },
-  "overall_summary": "The top names rank highly due to decent premiums, strong liquidity, and generally stable or positive trends with low earnings risk this week. Most candidates have solid implied volatility percentiles supporting premium collection, and their OTM call strikes are near ideal for income strategies. Owned stocks HIMS and NFLX were not in the top 10 this week but remain the best choice due to ownership status and ability to sell covered calls immediately without new capital. Non-owned stocks like AMD and TSLA offer good premiums but require new capital, reducing preference. Some names like META and QQQ show lower return on capital and higher spreads, making them less attractive.",
+  "overall_summary": "This week\u2019s top 10 candidates rank highly due to strong option metrics like good delta near 0.3, attractive out-of-the-money strikes around 3-6%, solid premium relative to capital needed for covered calls, and generally favorable volatility levels with no impending earnings risk. Most names show balanced premiums, good liquidity, and stable trends. The investor's owned stocks HIMS and NFLX did not appear in the top 10 this week, reducing immediate income opportunities in those positions. SPCX, owned by the investor, appears in the top 10 and stands out for actionable income trades this week. Some stocks like ARM and AMAT show higher implied volatility but lower liquidity, making them somewhat less desirable despite better yield. QQQ's low yield relative to capital and very small OTM gap make it less attractive despite higher liquidity.",
   "top_10_notes": [
     {
       "ticker": "AMD",
-      "comment": "Strong return on capital and liquidity; high IV percentile supports option premium. Expensive capital requirement."
-    },
-    {
-      "ticker": "TSLA",
-      "comment": "Good premium and delta; neutral trend; moderate volume and liquidity."
-    },
-    {
-      "ticker": "PLTR",
-      "comment": "High open interest and decent annual yield; neutral trend; smaller capital needed."
+      "comment": "Ranks highly for balanced premium, delta near 0.3, and strong upward trend with high implied volatility, but not owned by investor."
     },
     {
       "ticker": "SPCX",
-      "comment": "Highest return on capital and decent liquidity; unknown trend and missing data points."
+      "comment": "Owned by investor; excellent liquidity, balanced premium and delta; no earnings risk; best actionable choice this week."
     },
     {
-      "ticker": "MRVL",
-      "comment": "Good premium and return; low volume and some negative price movement recently."
+      "ticker": "DELL",
+      "comment": "Strong premium and return, upward trend, high IV percentile, but investor does not own shares."
     },
     {
-      "ticker": "MSFT",
-      "comment": "Lower annual yield; neutral trend; low IV percentile suggests less premium."
+      "ticker": "ARM",
+      "comment": "High annual yield and IV percentile but lower liquidity and neutral trend make it riskier."
     },
     {
-      "ticker": "NVDA",
-      "comment": "Well traded with decent liquidity; moderate return on capital; neutral trend."
+      "ticker": "AMAT",
+      "comment": "High IV and annual yield but lower liquidity and neutral trend; less desirable despite premium."
+    },
+    {
+      "ticker": "AVGO",
+      "comment": "Lower return on capital and neutral trend; decent liquidity but modest premium."
+    },
+    {
+      "ticker": "COIN",
+      "comment": "Good premium and yield but neutral trend and upcoming earnings in 17 days might increase risk."
+    },
+    {
+      "ticker": "PLTR",
+      "comment": "Moderate scores with neutral trend, solid liquidity, but investor does not own shares."
     },
     {
       "ticker": "QQQ",
-      "comment": "Low return on capital and volume; broad ETF exposure but less attractive premiums."
+      "comment": "Very low return relative to capital, minimal OTM buffer, but highest liquidity; not owned by investor."
     },
     {
-      "ticker": "INTC",
-      "comment": "Good return on capital and volume; upcoming earnings within 10 days but earnings risk shown as NO."
-    },
-    {
-      "ticker": "META",
-      "comment": "Lowest premium and return; low liquidity; elevated RSI may suggest overbought conditions."
+      "ticker": "ANET",
+      "comment": "Moderate return and liquidity with upward trend but investor does not own current position."
     }
   ]
 }
