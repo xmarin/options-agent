@@ -3,3 +3,7 @@ venv/
 __pycache__/
 .DS_Store
 reports/
+
+# Personal financial data - never publish (static site serves the whole repo root)
+data/schwab_transactions_*.json
+data/positions_baseline.json

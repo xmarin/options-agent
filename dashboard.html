@@ -183,6 +183,7 @@
     <button class="tab-btn active" data-tab="picks">📈 Weekly Picks</button>
     <button class="tab-btn" data-tab="positions">📊 My Positions</button>
     <button class="tab-btn" data-tab="pnl">💰 P&amp;L &amp; Trades</button>
+    <button class="tab-btn" data-tab="danilo">🤝 Danilo's Agent</button>
   </div>
 
   <!-- ══════════════════════════════════════
@@ -406,6 +407,53 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     </div><!-- /posContent -->
   </div><!-- /tab-positions -->
 
+  <!-- ══════════════════════════════════════
+       TAB 4 — Danilo's Agent (eToro directional picks)
+  ══════════════════════════════════════ -->
+  <div id="tab-danilo" class="tab-panel">
+
+    <!-- Auth wall -->
+    <div id="daniloAuthWall" class="auth-wall" style="display:none;">
+      <div class="lock-icon">🔒</div>
+      <h3>Sign in to view Danilo's picks</h3>
+      <p>Cross-agent picks are private to your account.</p>
+      <button class="log-btn" onclick="openLoginModal()">Sign In</button>
+    </div>
+
+    <div id="daniloContent" style="display:none;">
+
+      <div class="panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
+          <h2>Danilo's eToro Agent — Weekly Watchlist</h2>
+          <span id="daniloMeta" style="font-size:.8rem;color:var(--muted);">—</span>
+        </div>
+        <p style="color:var(--muted);font-size:.88rem;margin-bottom:14px;">
+          Directional stock picks from Danilo's autonomous eToro agent (5-layer analysis, 0–8 scoring).
+          His goal is buying the underlying; tickers overlapping your covered-call universe are highlighted.
+        </p>
+        <div class="trades-table-wrap" id="daniloPicksWrap">
+          <p style="color:var(--muted)">Loading…</p>
+        </div>
+      </div>
+
+      <div class="panel" id="daniloDiscardPanel" style="display:none;">
+        <h2>Discarded by His Agent</h2>
+        <p style="color:var(--muted);font-size:.88rem;margin-bottom:14px;">Tickers his agent evaluated and rejected this week, with the reason.</p>
+        <div class="trades-table-wrap" id="daniloDiscardWrap"></div>
+      </div>
+
+      <div class="panel" id="daniloEmptyPanel" style="display:none;">
+        <h2>No Picks Published Yet</h2>
+        <p style="color:var(--muted);line-height:1.7;">
+          Danilo's agent hasn't published a picks file yet, or the Monday fetch hasn't run.
+          The cron pulls the newest file from his shared Drive folder every Monday
+          (requires <code>GOOGLE_API_KEY</code> on the Render cron job).
+        </p>
+      </div>
+
+    </div><!-- /daniloContent -->
+  </div><!-- /tab-danilo -->
+
 </div><!-- /container -->
 
 <!-- ══════════════════════════════════════
@@ -617,6 +665,8 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     const picksContent = document.getElementById('picksContent');
     const posWall      = document.getElementById('posAuthWall');
     const posContent   = document.getElementById('posContent');
+    const danWall      = document.getElementById('daniloAuthWall');
+    const danContent   = document.getElementById('daniloContent');
     if (_session) {
       btn.textContent = '✓ Sign Out';
       btn.classList.add('signed-in');
@@ -625,6 +675,9 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       if (picksContent) picksContent.style.display = 'block';
       if (posWall)      posWall.style.display      = 'none';
       if (posContent)   posContent.style.display   = 'block';
+      if (danWall)      danWall.style.display      = 'none';
+      if (danContent)   danContent.style.display   = 'block';
+      _daniloInitialized = false; // allow reload with auth
     } else {
       btn.textContent = 'Sign In';
       btn.classList.remove('signed-in');
@@ -633,6 +686,8 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       if (picksContent) picksContent.style.display = 'none';
       if (posWall)      posWall.style.display      = 'block';
       if (posContent)   posContent.style.display   = 'none';
+      if (danWall)      danWall.style.display      = 'block';
+      if (danContent)   danContent.style.display   = 'none';
     }
   }
 
@@ -693,8 +748,87 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
       if (btn.dataset.tab === 'pnl') initPnLTab();
       if (btn.dataset.tab === 'positions') initPositionsTab();
+      if (btn.dataset.tab === 'danilo') initDaniloTab();
     });
   });
+
+  /* ═══════════════════════════════════════════
+     DANILO'S AGENT TAB
+  ═══════════════════════════════════════════ */
+  const DANILO_PICKS_URL = `published/danilo_picks_latest.json?t=${Date.now()}`;
+  const MY_PICKS_URL     = `published/picks_latest.json?t=${Date.now()}`;
+  let _daniloInitialized = false;
+
+  async function initDaniloTab() {
+    if (_daniloInitialized) return;
+    _daniloInitialized = true;
+
+    if (supabaseConfigured && !_session) return; // auth wall handles display
+
+    let danilo = null, mine = null;
+    try { const r = await fetch(DANILO_PICKS_URL); if (r.ok) danilo = await r.json(); } catch(e) {}
+    try { const r = await fetch(MY_PICKS_URL);     if (r.ok) mine   = await r.json(); } catch(e) {}
+
+    if (!danilo || !Array.isArray(danilo.picks) || danilo.picks.length === 0) {
+      document.getElementById('daniloEmptyPanel').style.display = 'block';
+      document.getElementById('daniloPicksWrap').innerHTML = '';
+      return;
+    }
+
+    const myTickers = new Set((mine?.picks || []).map(p => p.ticker));
+    document.getElementById('daniloMeta').textContent =
+      `Report: ${danilo.report_date || '—'}${danilo.source_file ? ' · ' + danilo.source_file : ''}`;
+    renderDaniloPicks(danilo.picks, myTickers);
+    renderDaniloDiscards(danilo.descartados || []);
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderDaniloPicks(picks, myTickers) {
+    const rows = picks.map(p => {
+      const overlap = myTickers.has(p.ticker);
+      const zone = Array.isArray(p.entry_zone) && p.entry_zone.length === 2
+        ? `$${toNum(p.entry_zone[0])?.toFixed(2)} – $${toNum(p.entry_zone[1])?.toFixed(2)}` : '—';
+      const biasCls = p.bias === 'long' ? 'pnl-positive' : p.bias === 'short' ? 'pnl-negative' : '';
+      const trendIcon = p.trend === 'up' ? '↑' : p.trend === 'down' ? '↓' : '→';
+      return `<tr>
+        <td><strong>${esc(p.ticker)}</strong>${overlap ? ' <span class="status-badge" style="background:var(--accent);color:#fff;" title="Also in your weekly top-10">both agents</span>' : ''}</td>
+        <td><span class="${biasCls}" style="font-weight:600;text-transform:uppercase;">${esc(p.bias || '—')}</span></td>
+        <td><span class="status-badge">${esc(p.status || '—')}</span></td>
+        <td>${p.stock_price != null ? '$' + toNum(p.stock_price)?.toFixed(2) : '—'}</td>
+        <td>${trendIcon} ${esc(p.trend || '—')}</td>
+        <td>${fmt(p.rsi, 1)}</td>
+        <td>${fmt(p.beta, 2)}</td>
+        <td>${zone}</td>
+        <td>${fmt(p.our_score, 2)}</td>
+        <td style="max-width:340px;white-space:normal;font-size:.82rem;color:var(--muted);">${esc(p.rationale || '')}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('daniloPicksWrap').innerHTML = `
+      <table>
+        <thead><tr>
+          <th>Ticker</th><th>Bias</th><th>Status</th><th>Price</th><th>Trend</th>
+          <th>RSI</th><th>Beta</th><th>Entry Zone</th><th>Score</th><th>Rationale</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  function renderDaniloDiscards(discards) {
+    if (!discards.length) return;
+    document.getElementById('daniloDiscardPanel').style.display = 'block';
+    document.getElementById('daniloDiscardWrap').innerHTML = `
+      <table>
+        <thead><tr><th>Ticker</th><th>Reason</th></tr></thead>
+        <tbody>${discards.map(d =>
+          `<tr><td><strong>${esc(d.ticker)}</strong></td><td style="white-space:normal;">${esc(d.motivo || '')}</td></tr>`
+        ).join('')}</tbody>
+      </table>`;
+  }
 
   /* ═══════════════════════════════════════════
      WEEKLY PICKS TAB
