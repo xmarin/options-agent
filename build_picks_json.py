@@ -12,8 +12,6 @@ import pandas as pd
 
 ROOT = Path(__file__).parent
 CSV_PATH = ROOT / "published" / "covered_call_report_latest.csv"
-OUT_PATH = ROOT / "published" / "picks_latest.json"
-
 TOP_N = 10
 
 
@@ -52,8 +50,18 @@ def main():
         "picks": picks,
     }
 
-    OUT_PATH.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    print(f"Saved picks JSON: {OUT_PATH} ({len(picks)} picks)")
+    published_dir = ROOT / "published"
+
+    # Dated file — e.g. picks_07-20-2026.json — lets consumers build their own history
+    dated_filename = f"picks_{date.today().strftime('%m-%d-%Y')}.json"
+    dated_path = published_dir / dated_filename
+    dated_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    print(f"Saved dated picks JSON:  {dated_path} ({len(picks)} picks)")
+
+    # Latest alias — always points to the most recent run
+    latest_path = published_dir / "picks_latest.json"
+    latest_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    print(f"Saved latest picks JSON: {latest_path}")
 
 
 if __name__ == "__main__":
