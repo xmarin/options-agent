@@ -5,3 +5,5 @@ python-dotenv
 openai
 yfinance
 scipy
+schwab-py
+httpx
