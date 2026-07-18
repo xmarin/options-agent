@@ -7,3 +7,4 @@ yfinance
 scipy
 schwab-py
 httpx
+flask

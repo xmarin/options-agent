@@ -8,6 +8,23 @@ services:
     staticPublishPath: .
     pullRequestPreviewsEnabled: false
 
+  - type: web
+    name: options-agent-webhook
+    runtime: python
+    repo: https://github.com/xmarin/options-agent
+    branch: main
+    rootDir: .
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 webhook_server.py
+    envVars:
+      - key: WEBHOOK_SECRET
+        sync: false   # set manually in Render dashboard
+      - key: PARTNER_RAW_BASE_URL
+        sync: false   # e.g. https://raw.githubusercontent.com/danilo/etoro-agent/main/published
+      - key: PARTNER_OUTPUT_FILE
+        value: published/danilo_picks_latest.json
+
   - type: cron
     name: options-agent-monday-job
     runtime: python
