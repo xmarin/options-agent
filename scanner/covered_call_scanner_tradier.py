@@ -618,8 +618,8 @@ def apply_final_scoring(df: pd.DataFrame) -> pd.DataFrame:
     owned_component = df["Owned Position"].astype(float)
     owned_count = int(owned_component.sum())
     if owned_count:
-        print(f"  📌 Owned-position bonus applied to {owned_count} ticker(s): "
-              f"{', '.join(df.loc[df['Owned Position'], 'Ticker'].tolist())}")
+        unique_owned = sorted(df.loc[df["Owned Position"], "Ticker"].unique().tolist())
+        print(f"  📌 Owned-position bonus applied to {len(unique_owned)} ticker(s): {', '.join(unique_owned)}")
 
     core_weight_total = (
         STRATEGY_CONFIG["premium_weight"]
