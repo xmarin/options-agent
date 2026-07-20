@@ -2,50 +2,50 @@
   "report_date": "2026-07-20",
   "best_trade": {
     "ticker": "SPCX",
-    "reason": "SPCX ranks highly with a strong final score (0.8647) among the top 10. It offers a balanced blend of good return on capital (2.48% weekly), high liquidity, and low risk since the investor already owns the stock, enabling immediate covered call writing without additional capital. The earnings risk is minimal with no upcoming earnings soon. The call is slightly out of the money, providing upside potential and a reasonable premium.",
-    "biggest_risk": "The main risk is the stock price growing quickly above the strike, leading to assignment and potentially losing shares, which the investor should be comfortable with."
+    "reason": "SPCX is the only weekly covered call candidate among the top 10 that the investor already owns, making it immediately actionable without additional capital. It offers a solid weekly return of 2.33% with good liquidity, a moderate OTM strike, no earnings risk, and a favorable assignment proxy near target delta.",
+    "biggest_risk": "The biggest risk is limited upside due to potential assignment if the stock rallies above the strike, resulting in loss of future price appreciation."
   },
-  "overall_summary": "The top names rank highly due to strong option premiums, balanced deltas near 0.3, decent out-of-the-money (OTM) distances, and good liquidity. Stocks like AMD and ARM have higher premiums and returns but are not owned by the investor, so they are less preferable unless dramatically better. SPCX stands out as the only owned stock among the top 10 with a very strong profile. The investor also owns HIMS and NFLX which did not rank in the top 10 this week, suggesting these stocks currently have less attractive weekly option income opportunities compared to the scanned names.",
+  "overall_summary": "This week's top candidates rank highly for weekly income generation via solid premiums, decent OTM strikes around 3%, and balanced deltas near 0.38. Many have strong liquidity and no imminent earnings risk. However, the investor already owns only SPCX among the top 10, making it preferable for a covered call sale. Stocks like MRVL and MU show higher premiums and yields but require significant capital and are not owned, reducing their attractiveness given the preference for owned stocks unless dramatically better. META looks less attractive due to low premium relative to stock price and proximity to earnings. The investor also holds HIMS and NFLX, though they did not rank this week, these remain fallback option candidates.",
   "top_10_notes": [
     {
-      "ticker": "SPCX",
-      "comment": "Owned position, very strong balance of premium, delta, and liquidity, minimal earnings risk."
+      "ticker": "AMD",
+      "comment": "High premium and annual yield but not owned and high capital requirement; neutral trend with no earnings risk."
     },
     {
-      "ticker": "AMD",
-      "comment": "Top premium and return, but not owned. Earnings in 15 days, somewhat higher risk."
+      "ticker": "SPCX",
+      "comment": "Owned by the investor, solid weekly return with good liquidity and no earnings risk, making it immediately actionable."
     },
     {
       "ticker": "MU",
-      "comment": "Good premium and liquidity, neutral trend but not owned."
+      "comment": "Highest annual yield and premium, but very high stock price and capital needed; not owned."
     },
     {
       "ticker": "META",
-      "comment": "Lower yield and premium relative to others, though solid fundamentals and upcoming earnings in 9 days."
+      "comment": "Low return on capital and low IV percentile; close to earnings in 9 days, which increases risk."
     },
     {
-      "ticker": "ARM",
-      "comment": "Good weekly yield and IV but trending down strongly; not owned, moderate risk."
+      "ticker": "DELL",
+      "comment": "Moderate return and liquidity; no earnings risk but not owned."
+    },
+    {
+      "ticker": "TXN",
+      "comment": "Good premium but lower liquidity; not owned."
     },
     {
       "ticker": "IBM",
-      "comment": "Lower return on capital and falling price trend, not owned."
+      "comment": "Low beta and solid liquidity but lower premium; not owned."
     },
     {
-      "ticker": "NOW",
-      "comment": "Highest return on capital of all, but not owned; neutral trend."
+      "ticker": "CRWD",
+      "comment": "Uptrend and good liquidity; moderate return but not owned."
     },
     {
       "ticker": "MRVL",
-      "comment": "Decent premium but downtrend and lower liquidity; not owned."
+      "comment": "Good premium yield but very low RSI and volatile; not owned."
     },
     {
-      "ticker": "MSFT",
-      "comment": "Low premium and return on capital with upcoming earnings; not owned."
-    },
-    {
-      "ticker": "HOOD",
-      "comment": "Low premium and return, little trend, not owned."
+      "ticker": "NOW",
+      "comment": "Highest return on capital with high IV percentile but very low OTM score; not owned."
     }
   ]
 }
