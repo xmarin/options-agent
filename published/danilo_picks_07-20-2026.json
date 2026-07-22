@@ -1,0 +1,33 @@
+{
+  "schema_version": "2.0",
+  "report_date": "2026-07-20",
+  "source": "danilo_ibkr_agent",
+  "premium_unit": "usd_per_contract",
+  "note": "Picks direccionales alcistas (comprar call) del agente IBKR de Danilo.",
+  "picks": [
+    {
+      "ticker": "RIVN",
+      "stock_price": 17.41,
+      "signal": "BULLISH_CALL",
+      "trend": "alcista",
+      "momentum_20d_pct": 15.3,
+      "call_strike": 17.5,
+      "call_expiration": "20260821",
+      "call_dte": 32,
+      "call_cost_usd": 154,
+      "delta": 0.54
+    },
+    {
+      "ticker": "SOFI",
+      "stock_price": 17.4,
+      "signal": "BULLISH_CALL",
+      "trend": "positivo",
+      "momentum_20d_pct": 1.81,
+      "call_strike": 17.5,
+      "call_expiration": "20260821",
+      "call_dte": 32,
+      "call_cost_usd": 142,
+      "delta": 0.53
+    }
+  ]
+}
