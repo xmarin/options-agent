@@ -2,50 +2,50 @@
   "report_date": "2026-07-27",
   "best_trade": {
     "ticker": "SPCX",
-    "reason": "SPCX is the only stock in the top 10 that the investor already owns, making it immediately actionable without additional capital. It has a strong annual yield of 3.3%, solid liquidity, and no earnings risk this week, supporting a safer income trade.",
-    "biggest_risk": "Potential for stock price appreciation beyond the strike leading to assignment, limiting further upside."
+    "reason": "SPCX is an owned stock, immediately actionable, with a strong final score (0.8761) and balanced metrics including a high premium score, solid Delta and OTM scores, good liquidity, and no earnings risk this week. It offers a decent weekly income estimate with low earnings risk, aligning well with the investor's preference to trade owned stocks unless an alternative is dramatically better.",
+    "biggest_risk": "Moderate volatility (IV percentile 70.2) could cause unanticipated price swings, potentially leading to assignment if the stock rises above the strike or loss if it falls."
   },
-  "overall_summary": "This week's top candidates rank highly due to a combination of strong premiums, decent out-of-the-money (OTM) distances, liquidity, and moderate to high implied volatility. Several names have elevated IV percentile and reasonable deltas near the 0.38 target, supporting income generation without excessive risk. The investor already owns SPCX from this list, which is a key advantage. HIMS and NFLX, currently owned but absent from the top 10 this week, remain potential income candidates but with fewer attractive weekly calls currently.",
+  "overall_summary": "The top-ranked names this week feature options with attractive premiums, solid liquidity, and balanced strikes slightly out-of-the-money, suitable for weekly covered calls. SPCX is favored since the investor already owns it, enabling immediate action. MU and AMD show higher annual yields and premiums but are not owned and require high capital. META and MSFT carry earnings risk soon, which adds uncertainty. GOOGL offers low premium and yield and has very low IV percentile, making it less attractive. TSLA and MRVL have decent metrics but lower final scores and are unowned. The investor's held positions, HIMS and NFLX, did not rank in this cycle, so the focus remains on SPCX among owned names.",
   "top_10_notes": [
     {
-      "ticker": "AMD",
-      "comment": "High premium and good scores but not currently owned by the investor."
+      "ticker": "SPCX",
+      "comment": "Top-ranked and owned by the investor; balanced metrics with no earnings risk and good liquidity."
     },
     {
       "ticker": "MU",
-      "comment": "Highest annual yield and IV percentile but very high capital required and not owned."
+      "comment": "High premium and yield but requires large capital and not owned; IV percentile very high, indicating heightened volatility."
     },
     {
-      "ticker": "SPCX",
-      "comment": "Owned by investor, strong yield, good liquidity, no earnings risk, immediately actionable."
+      "ticker": "AMD",
+      "comment": "Good premium and liquidity, but earnings risk approaching in 8 days; not owned."
     },
     {
       "ticker": "TSLA",
-      "comment": "High historical volatility and RSI low, but premium yield lower than others, not owned."
+      "comment": "High liquidity and low RSI signal possible undervaluation; lower premium score and not owned."
     },
     {
       "ticker": "META",
-      "comment": "Good premium but earnings risk in 2 days makes it riskier."
-    },
-    {
-      "ticker": "AMZN",
-      "comment": "Good liquidity but earnings risk in 3 days and moderate premium score."
-    },
-    {
-      "ticker": "QQQ",
-      "comment": "Excellent liquidity but lowest annual yield among top 10 and low IV percentile."
+      "comment": "Strong premium but earnings risk in 2 days makes it less desirable immediately; not owned."
     },
     {
       "ticker": "INTC",
-      "comment": "Decent premium but lower liquidity and not owned."
+      "comment": "Decent yield and no earnings risk but lower premium score; not owned."
+    },
+    {
+      "ticker": "MRVL",
+      "comment": "Relatively low liquidity and moderate premium; not owned."
+    },
+    {
+      "ticker": "QCOM",
+      "comment": "Good OTM score and no earnings risk but lower liquidity and premium; not owned."
     },
     {
       "ticker": "MSFT",
-      "comment": "Earnings risk soon and moderate premium; not owned."
+      "comment": "Good liquidity and balanced metrics but earnings risk in 2 days; lower annual yield; not owned."
     },
     {
-      "ticker": "NVDA",
-      "comment": "Very high liquidity but low premium yield and low IV percentile; not owned."
+      "ticker": "GOOGL",
+      "comment": "Lowest premium and annual yield, low IV percentile, making it the least attractive option; not owned."
     }
   ]
 }
