@@ -32,15 +32,41 @@ def fetch(week: str = None) -> dict:
 
 def sanitize(raw: dict) -> dict:
     """Normalize to a consistent schema for the dashboard."""
+
+    TREND_MAP = {
+        "alcista": "up", "bullish": "up", "up": "up", "positivo": "up",
+        "bajista": "down", "bearish": "down", "down": "down", "negativo": "down",
+    }
+    BIAS_MAP = {
+        "bullish": "long", "long": "long", "compra": "long",
+        "bearish": "short", "short": "short", "venta": "short",
+    }
+
     picks = []
     for p in raw.get("picks", []):
         if not isinstance(p, dict) or not p.get("ticker"):
             continue
+
+        # entry_zone: prefer [entry_low, entry_high] array; fall back to string parse
+        el = p.get("entry_low")
+        eh = p.get("entry_high")
+        if el is not None and eh is not None:
+            entry_zone = [el, eh]
+        else:
+            entry_zone = p.get("entry_zone")  # leave as-is if already array or absent
+
         picks.append({
             "ticker":           str(p.get("ticker", "")).upper()[:8],
             "stock_price":      p.get("stock_price"),
             "signal":           p.get("signal", "BULLISH_CALL"),
-            "trend":            p.get("trend"),
+            "bias":             BIAS_MAP.get(str(p.get("bias", "")).lower(), p.get("bias")),
+            "status":           p.get("status"),
+            "trend":            TREND_MAP.get(str(p.get("trend", "")).lower(), p.get("trend")),
+            "rsi":              p.get("rsi"),
+            "beta":             p.get("beta"),
+            "entry_zone":       entry_zone,
+            "our_score":        p.get("score") if p.get("score") is not None else p.get("final_score"),
+            "rationale":        p.get("rationale"),
             "momentum_20d_pct": p.get("momentum_20d_pct"),
             "call_strike":      p.get("call_strike"),
             "call_expiration":  p.get("call_expiration"),
