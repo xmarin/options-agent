@@ -78,6 +78,7 @@ def main():
 
         commit_message = f"Update published reports {date.today().isoformat()}"
         run(["git", "commit", "-m", commit_message], cwd=repo_dir)
+        run(["git", "pull", "--rebase", "origin", "main"], cwd=repo_dir)
         run(["git", "push", "origin", "main"], cwd=repo_dir)
 
 
