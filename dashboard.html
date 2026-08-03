@@ -341,8 +341,12 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     <div class="panel">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
         <h2 style="margin:0;">Trade History</h2>
-        <button class="log-btn" id="openLogBtn2" style="display:none;">+ Log New Trade</button>
+        <div style="display:flex;gap:8px;">
+          <button class="log-btn" id="importSchwabBtn" style="display:none;background:var(--muted);color:#fff;">📤 Import Schwab</button>
+          <button class="log-btn" id="openLogBtn2" style="display:none;">+ Log New Trade</button>
+        </div>
       </div>
+      <input type="file" id="schwabFileInput" accept=".json" style="display:none;">
       <div class="trades-table-wrap" id="tradesTableWrap">
         <p style="color:var(--muted);font-size:.9rem;">Loading trades…</p>
       </div>
@@ -455,6 +459,24 @@ create policy "Allow all" on public.trades for all using (true) with check (true
   </div><!-- /tab-danilo -->
 
 </div><!-- /container -->
+
+<!-- ══════════════════════════════════════
+     Schwab Import Preview Modal
+══════════════════════════════════════ -->
+<div id="importModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:780px;">
+    <h2>Import Schwab Transactions</h2>
+    <p style="color:var(--muted);font-size:.88rem;margin-bottom:14px;">
+      Parsed covered call trades from your Schwab export. Existing trades with the same ticker + strike + expiration will be updated; new ones will be added.
+    </p>
+    <div id="importPreviewWrap" style="overflow-x:auto;margin-bottom:16px;"></div>
+    <div id="importError" style="color:var(--bad);font-size:.88rem;display:none;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="log-btn" style="background:var(--muted);" onclick="closeImportModal()">Cancel</button>
+      <button class="log-btn" id="confirmImportBtn">✅ Import All</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════
      Login Modal
@@ -1698,6 +1720,225 @@ create policy "Allow all" on public.trades for all using (true) with check (true
   }
 
   init();
+
+  /* ═══════════════════════════════════════════
+     SCHWAB JSON IMPORT
+  ═══════════════════════════════════════════ */
+
+  // Show Import button alongside Log Trade when user is signed in
+  const _origUpdateAuthUI = updateAuthUI;
+  function patchImportBtn() {
+    const btn = document.getElementById('importSchwabBtn');
+    if (btn && supabaseConfigured && _session) btn.style.display = 'inline-block';
+    else if (btn) btn.style.display = 'none';
+  }
+
+  document.getElementById('importSchwabBtn')?.addEventListener('click', () => {
+    if (!supabaseConfigured || !_session) { alert('Sign in first.'); return; }
+    document.getElementById('schwabFileInput').click();
+  });
+
+  document.getElementById('schwabFileInput')?.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        const parsed = parseSchwabJSON(data);
+        showImportPreview(parsed);
+      } catch(err) {
+        alert('Could not parse file: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // reset so same file can be re-uploaded
+  });
+
+  function parseSchwabOptionSymbol(sym) {
+    // "SPCX 08/07/2026 115.00 C"
+    const m = sym.match(/^(\S+)\s+(\d{2}\/\d{2}\/\d{4})\s+([\d.]+)\s+([CP])$/);
+    if (!m) return null;
+    const [, ticker, dateStr, strikeStr] = m;
+    const [mm, dd, yyyy] = dateStr.split('/');
+    return { ticker, expiration: `${yyyy}-${mm}-${dd}`, strike: parseFloat(strikeStr) };
+  }
+
+  function parseSchwabDate(dateStr) {
+    // "08/03/2026" or "08/03/2026 as of 07/31/2026"
+    const clean = dateStr.replace(/\s+as of\s+.+/, '').trim();
+    const [mm, dd, yyyy] = clean.split('/');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function parseSchwabJSON(data) {
+    const txns = data.BrokerageTransactions || [];
+    const OPTION_ACTIONS = ['Sell to Open', 'Buy to Close', 'Expired', 'Assigned'];
+
+    // Filter to option transactions only
+    const optTxns = txns.filter(t =>
+      OPTION_ACTIONS.includes(t.Action) &&
+      /\d{2}\/\d{2}\/\d{4}/.test(t.Symbol || '')
+    );
+
+    // Group by symbol
+    const bySymbol = {};
+    optTxns.forEach(t => {
+      const sym = (t.Symbol || '').trim();
+      if (!bySymbol[sym]) bySymbol[sym] = [];
+      bySymbol[sym].push(t);
+    });
+
+    const trades = [];
+    Object.entries(bySymbol).forEach(([symbol, events]) => {
+      const open  = events.find(e => e.Action === 'Sell to Open');
+      const close = events.find(e => ['Expired', 'Assigned', 'Buy to Close'].includes(e.Action));
+      if (!open) return;
+
+      const parsed = parseSchwabOptionSymbol(symbol);
+      if (!parsed) return;
+
+      const premiumPerShare = parseFloat((open.Price || '').replace('$', '')) || 0;
+      const contracts       = parseInt(open.Quantity) || 1;
+      const netAmount       = parseFloat((open.Amount || '').replace('$', '')) || 0;
+
+      let status = 'open', closeDate = null, totalPnl = null, buybackPrice = null;
+
+      if (close) {
+        closeDate = parseSchwabDate(close.Date);
+        if (close.Action === 'Expired') {
+          status   = 'expired';
+          totalPnl = +netAmount.toFixed(2);
+        } else if (close.Action === 'Assigned') {
+          status   = 'assigned';
+          totalPnl = +netAmount.toFixed(2); // premium net; underlying handled separately
+        } else if (close.Action === 'Buy to Close') {
+          status        = 'closed';
+          const closeAmt = parseFloat((close.Amount || '').replace('$', '')) || 0;
+          buybackPrice  = parseFloat((close.Price || '').replace('$', '')) || null;
+          totalPnl      = +(netAmount + closeAmt).toFixed(2);
+        }
+      }
+
+      trades.push({
+        ticker:           parsed.ticker,
+        transaction_date: parseSchwabDate(open.Date),
+        contracts,
+        strike:           parsed.strike,
+        expiration:       parsed.expiration,
+        premium:          premiumPerShare,
+        total_premium:    +(premiumPerShare * contracts * 100).toFixed(2),
+        status,
+        close_date:       closeDate,
+        buyback_price:    buybackPrice,
+        total_pnl:        totalPnl,
+        notes:            `Schwab import: ${symbol}`,
+        _symbol:          symbol,
+      });
+    });
+
+    return trades;
+  }
+
+  let _importParsed = [];
+
+  function showImportPreview(trades) {
+    _importParsed = trades;
+    const statusBadge = s =>
+      s === 'expired'  ? '<span class="status-badge status-expired">Expired</span>'  :
+      s === 'assigned' ? '<span class="status-badge status-assigned">Assigned</span>' :
+      s === 'closed'   ? '<span class="status-badge status-closed">Closed</span>'    :
+                         '<span class="status-badge status-open">Open</span>';
+
+    const rows = trades.map(t => `<tr>
+      <td><strong>${esc(t.ticker)}</strong></td>
+      <td>${t.transaction_date}</td>
+      <td>$${t.strike.toFixed(2)}</td>
+      <td>${t.expiration}</td>
+      <td>${t.contracts}</td>
+      <td>$${t.premium.toFixed(2)}</td>
+      <td>${t.total_premium != null ? '$' + t.total_premium.toFixed(2) : '—'}</td>
+      <td>${statusBadge(t.status)}</td>
+      <td>${t.total_pnl != null ? (t.total_pnl >= 0 ? '<span class="pnl-positive">+$' : '<span class="pnl-negative">-$') + Math.abs(t.total_pnl).toFixed(2) + '</span>' : '—'}</td>
+    </tr>`).join('');
+
+    document.getElementById('importPreviewWrap').innerHTML = `
+      <table>
+        <thead><tr>
+          <th>Ticker</th><th>Open Date</th><th>Strike</th><th>Expiration</th>
+          <th>Qty</th><th>Premium</th><th>Total Collected</th><th>Status</th><th>P&amp;L</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    document.getElementById('importError').style.display = 'none';
+    document.getElementById('importModal').classList.add('open');
+  }
+
+  function closeImportModal() {
+    document.getElementById('importModal').classList.remove('open');
+    _importParsed = [];
+  }
+
+  document.getElementById('importModal')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('importModal')) closeImportModal();
+  });
+
+  document.getElementById('confirmImportBtn')?.addEventListener('click', async () => {
+    if (!_importParsed.length || !db) return;
+    const btn = document.getElementById('confirmImportBtn');
+    btn.disabled = true;
+    btn.textContent = 'Importing…';
+    const errEl = document.getElementById('importError');
+    errEl.style.display = 'none';
+
+    try {
+      // Fetch existing trades to detect duplicates
+      const { data: existing } = await db.from('trades').select('id, ticker, strike, expiration');
+      const existingMap = new Map(
+        (existing || []).map(r => [`${r.ticker}|${r.strike}|${r.expiration}`, r.id])
+      );
+
+      let inserted = 0, updated = 0, errors = 0;
+      for (const trade of _importParsed) {
+        const { _symbol, ...payload } = trade;
+        const key = `${payload.ticker}|${payload.strike}|${payload.expiration}`;
+        const existingId = existingMap.get(key);
+        let result;
+        if (existingId) {
+          result = await db.from('trades').update(payload).eq('id', existingId);
+          if (!result.error) updated++;
+        } else {
+          result = await db.from('trades').insert([payload]);
+          if (!result.error) inserted++;
+        }
+        if (result.error) { console.error(result.error); errors++; }
+      }
+
+      closeImportModal();
+      alert(`Import complete: ${inserted} added, ${updated} updated${errors ? ', ' + errors + ' errors (check console)' : ''}.`);
+      _pnlInitialized = false;
+      initPnLTab();
+    } catch(err) {
+      errEl.textContent = 'Import failed: ' + err.message;
+      errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '✅ Import All';
+    }
+  });
+
+  // Patch auth update to also show import button
+  const _authInterval = setInterval(() => {
+    if (typeof updateAuthUI === 'function') {
+      const origFn = updateAuthUI;
+      // Just call patchImportBtn whenever session changes
+    }
+  }, 500);
+  document.addEventListener('authStateChanged', patchImportBtn);
+
+  // Show import button if already signed in on page load
+  setTimeout(patchImportBtn, 1500);
+
 </script>
 </body>
 </html>
