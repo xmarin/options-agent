@@ -1837,12 +1837,20 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       });
     });
 
-      // ── Stock position changes ──────────────────────────────────────────────
+      // ── Stock position changes (last 90 days only) ─────────────────────────
+      // Using full transaction history would corrupt positions with old buy/sell
+      // cycles and shares acquired via transfer/spinoff. Only recent transactions
+      // represent actual new changes to track.
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 90);
+
       const stockNet = {};
       txns.forEach(t => {
         if (!['Buy', 'Sell'].includes(t.Action)) return;
         const sym = (t.Symbol || '').trim().toUpperCase();
         if (!/^[A-Z]{1,6}$/.test(sym)) return;
+        const txnDate = new Date(parseSchwabDate((t.Date || '').split(' ')[0].trim()));
+        if (txnDate < cutoff) return; // ignore old history
         const qty   = Math.abs(parseFloat(String(t.Quantity || '0').replace(/,/g, '')));
         const price = parseFloat(String(t.Price   || '0').replace(/[$,]/g, ''));
         if (!qty || isNaN(qty)) return;
