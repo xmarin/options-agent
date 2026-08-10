@@ -42,3 +42,8 @@ services:
       python3 fetch_danilo_picks.py && \
       python3 publish_reports_to_github.py
     schedule: "0 14 * * 1"
+    envVars:
+      - key: SUPABASE_URL
+        sync: false   # set manually in Render dashboard
+      - key: SUPABASE_ANON_KEY
+        sync: false   # set manually in Render dashboard
