@@ -72,10 +72,12 @@ def fetch_last_week_outcomes() -> list[dict]:
             f"&close_date=gte.{cutoff}"
             f"&order=close_date.desc"
         )
-        req = urllib.request.Request(url, headers={
-            "apikey": SUPABASE_KEY,
-            "Authorization": f"Bearer {SUPABASE_KEY}",
-        })
+        print(f"fetch_last_week_outcomes: querying {SUPABASE_URL}/rest/v1/trades (cutoff={cutoff})")
+        # Support both legacy anon key (eyJ...) and new publishable key (sb_publishable_...)
+        headers = {"Authorization": f"Bearer {SUPABASE_KEY}"}
+        if not SUPABASE_KEY.startswith("sb_"):
+            headers["apikey"] = SUPABASE_KEY
+        req = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(req, timeout=10) as resp:
             return json.loads(resp.read())
     except Exception as e:
