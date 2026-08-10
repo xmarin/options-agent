@@ -1,53 +1,52 @@
 {
   "report_date": "2026-08-10",
-  "last_week_recap": "",
+  "last_week_recap": "The investor sold three SPCX covered calls last week: the $115 call expiring 2026-08-07 was assigned, earning $720 in premium but shares were called away at $115, resulting in missed upside beyond $115. The $115 call expiring 2026-07-31 and the $130 call expiring 2026-07-24 both expired worthless, fully retaining premiums of $360 and $380 respectively. Total premium collected was $1460 with a net P&L of $1457.99, showing effective income generation and good trade selection, with minimal downside and mostly low assignment risk except for the assigned call.",
   "best_trade": {
     "ticker": "SPCX",
-    "reason": "SPCX is the top-ranked trade this week among the top 10 candidates with the highest final score (0.8641) and strong metrics including a high return on capital (2.65% weekly), good liquidity, and no earnings risk. It is also owned by the investor, allowing immediate covered call selling without additional capital. These factors align well with the strategy to prefer owned positions unless a non-owned stock is significantly better.",
-    "biggest_risk": "The biggest risk is the stock price rising above the 136 strike, leading to assignment and potential missed upside beyond the strike price."
+    "reason": "SPCX is ranked highest with a strong final score of 0.8858 and is already owned by the investor, allowing immediate covered call sales without additional capital. The call option expiring in 4 days at $136 strike offers $410 premium with a 3.11% weekly return on capital and a solid delta (~0.40) suggesting balanced income vs. assignment risk. SPCX also has very high liquidity and an excellent earnings score with no earnings risk this week, making it actionable and efficient for weekly income. Owning SPCX makes this the best trade given the investor preference to use owned stock unless another is dramatically better.",
+    "biggest_risk": "The biggest risk is potential assignment if SPCX's price moves above $136 before or at expiration, which could force selling shares possibly earlier than desired and limit further upside."
   },
-  "overall_summary": "This week\u2019s top candidates show good premium potential with relatively low earnings risk and mostly favorable technical trends. Among the owned stocks, SPCX clearly stands out. Other owned stocks like HIMS and NFLX are not in this week's top 10, thus the focus remains on SPCX for immediate income. Non-owned stocks, while offering reasonable returns, either have lower final scores or less ideal risk profiles compared to SPCX.",
+  "overall_summary": "This week's top picks scored well based on premium, liquidity, delta, and yield metrics. SPCX stands out for the investor given ownership and high income with balanced risk. AMAT is a strong runner-up with high premium but requires new capital. Other stocks have lower yields or volume. Prior trades were profitable with good premium retention and limited assignment impact. Maintaining a focus on currently owned stocks for covered calls remains prudent unless compelling opportunities arise.",
   "top_10_notes": [
     {
       "ticker": "SPCX",
-      "comment": "Owned by the investor, highest final score, strong premium and liquidity, low risk, ready to sell covered calls."
+      "comment": "Owned by investor, top scored, good yield, immediate actionable with option expiring in 4 days and no earnings risk."
     },
     {
-      "ticker": "PLTR",
-      "comment": "Good liquidity and trend, but not owned by the investor and lower return on capital compared to SPCX."
+      "ticker": "AMAT",
+      "comment": "High premium but not owned; requires significant capital. Very high IV percentile and strong scores but less liquidity."
     },
     {
       "ticker": "DELL",
-      "comment": "Higher premium but requires large capital, lower liquidity, not currently owned."
+      "comment": "Uptrend and decent premium but lower return on capital and liquidity."
     },
     {
       "ticker": "CRWD",
-      "comment": "Reasonable premium and liquidity but smaller return on capital than SPCX, not owned."
+      "comment": "Good liquidity and stable trend but lower annual yield; not owned."
     },
     {
-      "ticker": "META",
-      "comment": "Low annual yield and relatively expensive stock price, downward trend signals some caution, not owned."
-    },
-    {
-      "ticker": "NOW",
-      "comment": "Strong liquidity and upward trend but lower return on capital and not owned."
-    },
-    {
-      "ticker": "AMZN",
-      "comment": "Lower premium returns and IV percentile, but good liquidity; not owned."
-    },
-    {
-      "ticker": "ARM",
-      "comment": "Higher volatility and beta suggest risk, moderate premium but low liquidity; not owned."
-    },
-    {
-      "ticker": "ORCL",
-      "comment": "Moderate return and liquidity with neutral trend, not owned by the investor."
+      "ticker": "PLTR",
+      "comment": "Strong uptrend and volume but relatively low yield; not owned."
     },
     {
       "ticker": "INTC",
-      "comment": "Decent return and liquidity, but neutral trend and not owned."
+      "comment": "Neutral trend, moderate yield, good liquidity, not owned."
+    },
+    {
+      "ticker": "AMZN",
+      "comment": "Lower yield and low IV percentile; not owned."
+    },
+    {
+      "ticker": "META",
+      "comment": "Moderate premium and neutral trend but lower annual yield; not owned."
+    },
+    {
+      "ticker": "NOW",
+      "comment": "Uptrend and good liquidity but low yield; not owned."
+    },
+    {
+      "ticker": "DDOG",
+      "comment": "Neutral trend, moderate premium, low liquidity; not owned."
     }
-  ],
-  "additional_notes": "The investor owns HIMS and NFLX which did not rank in this week\u2019s top 10, so they remain eligible for covered call selling but are less optimal compared to SPCX."
+  ]
 }
