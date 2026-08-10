@@ -1837,20 +1837,46 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       });
     });
 
-    return trades;
+      // ── Stock position changes ──────────────────────────────────────────────
+      const stockNet = {};
+      txns.forEach(t => {
+        if (!['Buy', 'Sell'].includes(t.Action)) return;
+        const sym = (t.Symbol || '').trim().toUpperCase();
+        if (!/^[A-Z]{1,6}$/.test(sym)) return;
+        const qty   = Math.abs(parseFloat(String(t.Quantity || '0').replace(/,/g, '')));
+        const price = parseFloat(String(t.Price   || '0').replace(/[$,]/g, ''));
+        if (!qty || isNaN(qty)) return;
+        if (!stockNet[sym]) stockNet[sym] = { shares: 0, buyCost: 0, buyShares: 0 };
+        if (t.Action === 'Buy') {
+          stockNet[sym].shares    += qty;
+          stockNet[sym].buyCost   += qty * price;
+          stockNet[sym].buyShares += qty;
+        } else {
+          stockNet[sym].shares -= qty;
+        }
+      });
+      const stockChanges = Object.entries(stockNet)
+        .map(([ticker, v]) => ({
+          ticker,
+          shares:   Math.round(v.shares),
+          avg_cost: v.buyShares > 0 ? +(v.buyCost / v.buyShares).toFixed(4) : null,
+        }))
+        .filter(s => s.shares !== 0);
+
+    return { trades, stockChanges };
   }
 
-  let _importParsed = [];
+  let _importParsed = { trades: [], stockChanges: [] };
 
-  function showImportPreview(trades) {
-    _importParsed = trades;
+  function showImportPreview({ trades, stockChanges }) {
+    _importParsed = { trades, stockChanges };
     const statusBadge = s =>
       s === 'expired'  ? '<span class="status-badge status-expired">Expired</span>'  :
       s === 'assigned' ? '<span class="status-badge status-assigned">Assigned</span>' :
       s === 'closed'   ? '<span class="status-badge status-closed">Closed</span>'    :
                          '<span class="status-badge status-open">Open</span>';
 
-    const rows = trades.map(t => `<tr>
+    const tradeRows = trades.map(t => `<tr>
       <td><strong>${esc(t.ticker)}</strong></td>
       <td>${t.transaction_date}</td>
       <td>$${t.strike.toFixed(2)}</td>
@@ -1862,21 +1888,47 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       <td>${t.total_pnl != null ? (t.total_pnl >= 0 ? '<span class="pnl-positive">+$' : '<span class="pnl-negative">-$') + Math.abs(t.total_pnl).toFixed(2) + '</span>' : '—'}</td>
     </tr>`).join('');
 
+    let stockSection = '';
+    if (stockChanges.length) {
+      const stockRows = stockChanges.map(s => {
+        const sign  = s.shares > 0 ? '+' : '';
+        const color = s.shares > 0 ? 'var(--positive)' : 'var(--negative)';
+        const note  = s.shares > 0
+          ? (s.avg_cost ? `New position @ $${s.avg_cost.toFixed(2)}/share` : 'Position added')
+          : Math.abs(s.shares) >= 100
+            ? '⚠️ Position closed (assigned/sold)'
+            : 'Shares reduced';
+        return `<tr>
+          <td><strong>${esc(s.ticker)}</strong></td>
+          <td style="color:${color};font-weight:600">${sign}${s.shares} shares${s.avg_cost && s.shares > 0 ? ' @ $' + s.avg_cost.toFixed(2) : ''}</td>
+          <td style="color:var(--muted);font-size:.85rem">${note}</td>
+        </tr>`;
+      }).join('');
+      stockSection = `
+        <p style="margin:16px 0 6px;font-weight:600;color:var(--text)">📊 Stock Position Updates</p>
+        <table>
+          <thead><tr><th>Ticker</th><th>Change</th><th>Note</th></tr></thead>
+          <tbody>${stockRows}</tbody>
+        </table>`;
+    }
+
     document.getElementById('importPreviewWrap').innerHTML = `
+      <p style="margin:0 0 6px;font-weight:600;color:var(--text)">📋 Covered Call Trades</p>
       <table>
         <thead><tr>
           <th>Ticker</th><th>Open Date</th><th>Strike</th><th>Expiration</th>
           <th>Qty</th><th>Premium</th><th>Total Collected</th><th>Status</th><th>P&amp;L</th>
         </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>`;
+        <tbody>${tradeRows || '<tr><td colspan="9" style="color:var(--muted);text-align:center">No covered call trades found</td></tr>'}</tbody>
+      </table>
+      ${stockSection}`;
     document.getElementById('importError').style.display = 'none';
     document.getElementById('importModal').classList.add('open');
   }
 
   function closeImportModal() {
     document.getElementById('importModal').classList.remove('open');
-    _importParsed = [];
+    _importParsed = { trades: [], stockChanges: [] };
   }
 
   document.getElementById('importModal')?.addEventListener('click', e => {
@@ -1884,7 +1936,8 @@ create policy "Allow all" on public.trades for all using (true) with check (true
   });
 
   document.getElementById('confirmImportBtn')?.addEventListener('click', async () => {
-    if (!_importParsed.length || !db) return;
+    const { trades: importTrades, stockChanges } = _importParsed;
+    if (!importTrades.length && !stockChanges.length || !db) return;
     const btn = document.getElementById('confirmImportBtn');
     btn.disabled = true;
     btn.textContent = 'Importing…';
@@ -1892,31 +1945,91 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     errEl.style.display = 'none';
 
     try {
-      // Fetch existing trades to detect duplicates
-      const { data: existing } = await db.from('trades').select('id, ticker, strike, expiration');
-      const existingMap = new Map(
-        (existing || []).map(r => [`${r.ticker}|${r.strike}|${r.expiration}`, r.id])
-      );
-
+      // ── 1. Import covered call trades ──────────────────────────────────────
       let inserted = 0, updated = 0, errors = 0;
-      for (const trade of _importParsed) {
-        const { _symbol, ...payload } = trade;
-        const key = `${payload.ticker}|${payload.strike}|${payload.expiration}`;
-        const existingId = existingMap.get(key);
-        let result;
-        if (existingId) {
-          result = await db.from('trades').update(payload).eq('id', existingId);
-          if (!result.error) updated++;
-        } else {
-          result = await db.from('trades').insert([payload]);
-          if (!result.error) inserted++;
+      if (importTrades.length) {
+        const { data: existing } = await db.from('trades').select('id, ticker, strike, expiration');
+        const existingMap = new Map(
+          (existing || []).map(r => [`${r.ticker}|${r.strike}|${r.expiration}`, r.id])
+        );
+        for (const trade of importTrades) {
+          const { _symbol, ...payload } = trade;
+          const key = `${payload.ticker}|${payload.strike}|${payload.expiration}`;
+          const existingId = existingMap.get(key);
+          let result;
+          if (existingId) {
+            result = await db.from('trades').update(payload).eq('id', existingId);
+            if (!result.error) updated++;
+          } else {
+            result = await db.from('trades').insert([payload]);
+            if (!result.error) inserted++;
+          }
+          if (result.error) { console.error(result.error); errors++; }
         }
-        if (result.error) { console.error(result.error); errors++; }
+      }
+
+      // ── 2. Update stock positions ──────────────────────────────────────────
+      let posAdded = 0, posUpdated = 0, posRemoved = 0;
+      if (stockChanges.length) {
+        const { data: existingPos } = await db.from('positions').select('*');
+        const posMap = new Map((existingPos || []).map(p => [p.ticker, p]));
+
+        for (const change of stockChanges) {
+          const cur = posMap.get(change.ticker);
+          if (change.shares > 0) {
+            // Buy: create or increase position with weighted avg cost
+            let newShares = change.shares;
+            let newAvgCost = change.avg_cost;
+            if (cur) {
+              newShares = cur.shares + change.shares;
+              if (change.avg_cost && cur.avg_cost) {
+                newAvgCost = +((cur.shares * cur.avg_cost + change.shares * change.avg_cost) / newShares).toFixed(4);
+              } else {
+                newAvgCost = cur.avg_cost || change.avg_cost;
+              }
+            }
+            const payload = {
+              ticker:     change.ticker,
+              shares:     newShares,
+              avg_cost:   newAvgCost,
+              total_cost: newAvgCost ? +(newShares * newAvgCost).toFixed(2) : null,
+            };
+            if (cur) {
+              await db.from('positions').update(payload).eq('id', cur.id);
+              posUpdated++;
+            } else {
+              await db.from('positions').insert([payload]);
+              posAdded++;
+            }
+          } else {
+            // Sell: reduce or remove position
+            if (cur) {
+              const newShares = cur.shares + change.shares; // change.shares is negative
+              if (newShares <= 0) {
+                await db.from('positions').delete().eq('id', cur.id);
+                posRemoved++;
+              } else {
+                await db.from('positions').update({
+                  shares:     newShares,
+                  total_cost: cur.avg_cost ? +(newShares * cur.avg_cost).toFixed(2) : null,
+                }).eq('id', cur.id);
+                posUpdated++;
+              }
+            }
+          }
+        }
       }
 
       closeImportModal();
-      alert(`Import complete: ${inserted} added, ${updated} updated${errors ? ', ' + errors + ' errors (check console)' : ''}.`);
+      const tradeSummary = importTrades.length
+        ? `${inserted} trade(s) added, ${updated} updated${errors ? ', ' + errors + ' errors' : ''}`
+        : 'No trades';
+      const posSummary = stockChanges.length
+        ? ` | Positions: ${posAdded} added, ${posUpdated} updated, ${posRemoved} removed`
+        : '';
+      alert(`Import complete: ${tradeSummary}${posSummary}.`);
       _pnlInitialized = false;
+      _positionsInitialized = false;
       initPnLTab();
     } catch(err) {
       errEl.textContent = 'Import failed: ' + err.message;
