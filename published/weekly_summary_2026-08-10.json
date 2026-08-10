@@ -2,50 +2,50 @@
   "report_date": "2026-08-10",
   "best_trade": {
     "ticker": "SPCX",
-    "reason": "SPCX is the highest-ranked covered-call trade this week with a superior final score of 0.9122. It is an owned stock, making it immediately actionable without additional capital. The trade offers a strong return on capital of 3.56% for the week, excellent liquidity, high IV percentile at 94.7%, and no earnings risk.",
-    "biggest_risk": "The biggest risk is potential assignment if the stock price rises sharply above the 138 strike, limiting upside potential. Additionally, implied volatility could decrease, reducing premium capture."
+    "reason": "SPCX is already owned, enabling immediate covered call selling with a high final score of 0.8706. It offers the highest return on capital (3.56%) and weekly premium ($470) among top candidates, with excellent liquidity and no earnings risk.",
+    "biggest_risk": "Downside price movement beyond the strike could reduce share value, and early assignment risk remains given decent delta and OTM proximity."
   },
-  "overall_summary": "The top candidates this week stand out due to strong liquidity, solid premiums relative to strike prices, and minimal earnings risk. SPCX leads given its high scores across premium, delta, OTM proximity, and liquidity. Owned stocks like SPCX are preferred for immediate execution. Other names such as PLTR and MRVL offer good metrics but are not owned, so they rank lower for this investor. Stocks like META and AMZN have lower returns and less attractive yields. HIMS and NFLX, current holdings not ranking in the top 10 this week, remain viable for covered calls but did not show as favorable metrics as SPCX this cycle.",
+  "overall_summary": "This week, the top candidates rank highly due to attractive weekly returns, good liquidity, and low earnings risk. SPCX stands out due to top premium, yield, and ownership status. Other names like PLTR and CRWD show strong scores but are not currently owned, posing capital acquisition needs. Stocks like META and MSFT have lower premium yields and higher bid-ask spreads, making them less desirable for weekly income. The investor owns SPCX (best short-term candidate), and holds HIMS and NFLX (not in this week's top 10 but relevant to note).",
   "top_10_notes": [
     {
       "ticker": "SPCX",
-      "comment": "Owned stock with best overall score, highest weekly and annual return, very strong liquidity and no earnings risk, making it ideal for covered call writing."
+      "comment": "Owned stock with best weekly return, high liquidity, no earnings event risk, and strong scores."
     },
     {
       "ticker": "PLTR",
-      "comment": "Strong trending stock with high volume, but lower return on capital (1.39%) and not owned by investor."
-    },
-    {
-      "ticker": "MRVL",
-      "comment": "Good premium and liquidity but stock shows neutral trend and is not owned, requiring capital to buy shares."
+      "comment": "High volume and open interest with upward trend, but not owned and lower return on capital."
     },
     {
       "ticker": "CRWD",
-      "comment": "Lower return and somewhat closer OTM, but stable with no earnings risk; not owned."
+      "comment": "Good scores and trend, but not owned and requires large capital."
     },
     {
       "ticker": "INTC",
-      "comment": "Decent yield and liquidity; neutral trend and no earnings risk but lower premium score and not owned."
-    },
-    {
-      "ticker": "META",
-      "comment": "Lowest return on capital and lower IV percentile; despite moderate liquidity, not attractive compared to others."
+      "comment": "Neutral trend with decent return but not owned; moderate liquidity."
     },
     {
       "ticker": "NVDA",
-      "comment": "Good liquidity and trending up but lower annual yield and close earning date may add risk; not owned."
+      "comment": "Strong liquidity and trend but lowest yield and close to earnings in 16 days."
+    },
+    {
+      "ticker": "META",
+      "comment": "Lower liquidity and low relative yield; neutral trend and no immediate earnings risk."
     },
     {
       "ticker": "ORCL",
-      "comment": "Good liquidity and balanced metrics but neutral trend and moderate volatility; not owned."
+      "comment": "Decent return with neutral trend but smaller volumes; not owned."
     },
     {
       "ticker": "AMZN",
-      "comment": "Volatile with low annual yield and nearing earnings; less desirable for this trade."
+      "comment": "Low yield despite high volume; upward trend but not owned."
     },
     {
-      "ticker": "GOOGL",
-      "comment": "Lower return, moderate liquidity, and earnings date risk; not owned."
+      "ticker": "MRVL",
+      "comment": "Good yield but neutral trend and no ownership; RSI and beta suggest potential volatility."
+    },
+    {
+      "ticker": "MSFT",
+      "comment": "Low yield with high price; high RSI may indicate overbought conditions."
     }
   ]
 }
