@@ -3,6 +3,11 @@
   "latest_summary": "weekly_summary_latest.json",
   "reports": [
     {
+      "date": "2026-08-17",
+      "report": "covered_call_report_2026-08-17.csv",
+      "summary": "weekly_summary_2026-08-17.json"
+    },
+    {
       "date": "2026-08-10",
       "report": "covered_call_report_2026-08-10.csv",
       "summary": "weekly_summary_2026-08-10.json"
