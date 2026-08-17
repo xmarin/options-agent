@@ -1,52 +1,52 @@
 {
   "report_date": "2026-08-17",
-  "last_week_recap": "",
+  "last_week_recap": "No data provided on last week's outcomes.",
   "best_trade": {
     "ticker": "INTC",
-    "reason": "INTC is an owned stock, making this weekly covered call immediately actionable without additional capital. It offers a solid return on capital (1.84% weekly) with good liquidity and moderate risk given its neutral trend and decent volatility level. The strike is slightly out-of-the-money, balancing income and assignment risk well.",
-    "biggest_risk": "Potential assignment risk if INTC's price rises above the 106 strike, which would limit upside potential for the stock."
+    "reason": "INTC is the only stock from this week's top 10 that the investor already owns, allowing immediate covered call selling without additional capital. Its option features a strong final score (0.8208), solid premium return (1.55% weekly), and good liquidity (volume 1141, open interest 1721), with no earnings risk before expiration. The offered premium is attractive relative to capital requirement, and the strike is slightly OTM, balancing premium income and upside potential.",
+    "biggest_risk": "The main risk is assignment if INTC's price rises above the 107 strike before expiration, potentially capping upside gains. Also, the premium and return are moderate, so significant price moves could reduce the effectiveness of covered call income."
   },
-  "overall_summary": "This week's top trades generally offer solid weekly income with moderate out-of-the-money strikes, balancing income and assignment risk. The list includes strong names with good liquidity and low earnings risk. The investor already owns INTC, making it the preferred choice due to ease of implementation and decent returns. Other owned stocks, HIMS and NFLX, did not rank in this week's top 10, indicating fewer immediate high-income opportunities in those holdings.",
+  "overall_summary": "Among this week's top candidates, INTC stands out primarily due to the investor already owning the shares and the balanced trade metrics including premium, liquidity, and no imminent earnings risk. Other top names like MU, DELL, and MRVL offer higher returns but require new capital and lack current ownership. Stocks like AMZN and NVDA show lower premium yields and increased earnings uncertainty soon after expiration, making them less desirable now. The investor should focus on INTC this week for immediate, lower-risk income generation via covered calls.",
   "top_10_notes": [
     {
+      "ticker": "INTC",
+      "comment": "Owned by investor, strong premium relative to capital, good liquidity, no earnings risk this week, balanced OTM strike."
+    },
+    {
       "ticker": "MU",
-      "comment": "High option premium and return but not owned by the investor. Strong premium score and liquidity, but large capital required."
+      "comment": "Excellent weekly return and liquidity but not owned; large capital requirement."
     },
     {
       "ticker": "DELL",
-      "comment": "Good return on capital and high IV percentile, indicating strong implied volatility environment, but investor does not own it."
-    },
-    {
-      "ticker": "INTC",
-      "comment": "Owned stock with solid weekly income and balanced metrics, making it immediately actionable."
-    },
-    {
-      "ticker": "AMD",
-      "comment": "Good liquidity and moderate premium, but not currently owned and slightly lower return."
-    },
-    {
-      "ticker": "TSLA",
-      "comment": "High liquidity but lowest return on capital here, plus recent negative 20-day return suggests weakness."
-    },
-    {
-      "ticker": "PLTR",
-      "comment": "Strong price gain trend but lower premium and return on capital."
+      "comment": "High return and good trend, but moderate liquidity and not owned."
     },
     {
       "ticker": "MRVL",
-      "comment": "Decent return and liquidity but not owned."
-    },
-    {
-      "ticker": "AMZN",
-      "comment": "Very liquid but lowest return on capital and low IV percentile suggests less premium."
+      "comment": "Good premium with high liquidity, but not owned."
     },
     {
       "ticker": "LRCX",
-      "comment": "Good premium and IV percentile but lower score and not owned."
+      "comment": "Solid metrics but lower liquidity and not owned."
     },
     {
       "ticker": "ARM",
-      "comment": "High IV and return but lower liquidity and not owned."
+      "comment": "Strong premium but lower liquidity, and not owned."
+    },
+    {
+      "ticker": "PLTR",
+      "comment": "Lower premium yield and IV percentile; decent liquidity but not owned."
+    },
+    {
+      "ticker": "SPCX",
+      "comment": "Good liquidity but less data on trend and volatility; not owned."
+    },
+    {
+      "ticker": "AMZN",
+      "comment": "Low return on capital and low IV percentile; earnings risk moderate with 73 days out; not owned."
+    },
+    {
+      "ticker": "NVDA",
+      "comment": "Lower premium yield and approaching earnings soon; not owned, increasing risk."
     }
   ]
 }
