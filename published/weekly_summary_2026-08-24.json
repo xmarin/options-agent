@@ -2,51 +2,51 @@
   "report_date": "2026-08-24",
   "last_week_recap": "",
   "best_trade": {
-    "ticker": "MRVL",
-    "reason": "MRVL offers the highest weekly return on capital (3.67%) and annual yield (3.35%) among the top candidates, combined with strong liquidity and a balanced risk profile. Although the investor does not currently own MRVL, its premium, delta, and volume metrics make it a standout choice that is dramatically better across key metrics than the owned positions INTC, HIMS, and NFLX, which did not rank in the top 10 this week.",
-    "biggest_risk": "MRVL is a high-beta stock with a delta near 0.385, so price swings could affect assignment risk. Also, while there is no earnings risk this week, the investor needs to monitor ongoing volatility and market movements."
+    "ticker": "INTC",
+    "reason": "Although INTC, HIMS, and NFLX did not rank in the top 10 this week, the investor already owns INTC and can sell covered calls immediately with no additional capital. Owning the stock reduces execution risk and matches the investor's preference for owned positions. Since none of the top 10 covered call opportunities are owned positions, selecting INTC maximizes income from current holdings while avoiding the risks tied to less familiar stocks.",
+    "biggest_risk": "The primary risk is that INTC's weekly premium and return on capital might be lower than the top-ranked non-owned stocks, potentially limiting income growth. Also, if the stock price surges, upside could be missed due to assignment."
   },
-  "overall_summary": "The top 10 ranked stocks mostly reflect solid weekly premium generation opportunities with balanced deltas and decent OTM levels. No earnings risk is present except for NVDA, which is best avoided due to imminent earnings. The investor's owned stocks (INTC, HIMS, NFLX) were not among the best opportunities this week, so a selection outside current holdings is warranted based on risk-reward and premium metrics.",
+  "overall_summary": "This week's top candidates display solid weekly income potential based on premiums, liquidity, and implied volatility, but none match owned positions. The investor already owns INTC, HIMS, and NFLX, providing immediate covered call selling opportunities without new capital deployment. The highest scoring candidates MU and MRVL offer notable premiums but are not owned. Given the preference and risk profile, sticking with an existing owned stock, specifically INTC, is the best approach this week.",
   "top_10_notes": [
     {
       "ticker": "MU",
-      "comment": "Strong premium and balanced delta but not owned by the investor. Neutral trend and no earnings risk."
+      "comment": "Highest final score (0.8286) with strong premium and ROC but not owned. Very high beta and IV percentile; trending neutral. Good income candidate but unfamiliar stock for investor."
     },
     {
       "ticker": "MRVL",
-      "comment": "Highest return on capital and annual yield. Balanced risk and excellent liquidity, but not currently owned."
+      "comment": "Strong return on capital (3.68%) and annual yield (3.35%) with excellent liquidity and volume, but not owned by investor."
     },
     {
       "ticker": "MRNA",
-      "comment": "High volatility and excellent return, but relatively low liquidity and upcoming earnings in 73 days."
-    },
-    {
-      "ticker": "CRWD",
-      "comment": "Good liquidity and balanced premium, but lower annual yield and neutral trend."
-    },
-    {
-      "ticker": "CRM",
-      "comment": "Uptrend with good liquidity but lower weekly return and annual yield."
+      "comment": "High HV rank and strong trend up but premium score is low; earnings approaching in 73 days, no earnings risk now."
     },
     {
       "ticker": "DELL",
-      "comment": "Lower return and relatively neutral trend; decent liquidity."
+      "comment": "Lower premium yield and with neutral trend; good liquidity; not owned."
     },
     {
-      "ticker": "COIN",
-      "comment": "Moderate return with no earnings risk, but slightly weaker premium score."
+      "ticker": "CRM",
+      "comment": "Upward trend with solid liquidity but lower premium and delta; not owned."
     },
     {
       "ticker": "SPCX",
-      "comment": "Very high liquidity but lower premium and unknown trend."
+      "comment": "Excellent liquidity and good scores but unknown trend and no RSI/volatility data; not owned."
     },
     {
       "ticker": "PLTR",
-      "comment": "Low return with a high RSI signaling possible overbought; upcoming earnings in 70 days."
+      "comment": "Uptrend with good liquidity but low IV percentile and modest premium yield; not owned."
     },
     {
       "ticker": "NVDA",
-      "comment": "Avoid due to imminent earnings risk despite decent liquidity and premium."
+      "comment": "Strong liquidity and trend with earnings risk imminent (2 days away), which is a caution factor."
+    },
+    {
+      "ticker": "COIN",
+      "comment": "Good premium and spread but moderate RSI and neutral trend; earnings in 66 days."
+    },
+    {
+      "ticker": "HOOD",
+      "comment": "Good liquidity with moderate premium and return; neutral trend with upcoming earnings risk."
     }
   ]
 }
