@@ -1,0 +1,27 @@
+{
+  "report_date": "2026-05-25",
+  "best_trade": {
+    "ticker": "ARM",
+    "reason": "ARM offers the highest weekly return on capital (2.38%) and annual yield (2.17%) with a solid delta close to target, strong upward trend, and no earnings risk. Its IV percentile at 100% indicates premium-rich options, enhancing income potential.",
+    "biggest_risk": "High implied volatility and recent strong gains increase the risk of a pullback or volatility crush, which could reduce premium value or cause sharp price drops."
+  },
+  "overall_summary": "This week's top candidates show strong upward trends with healthy premiums and balanced risk profiles. ARM and AMD stand out for income potential and liquidity, while AMZN and ADBE have lower premiums and less favorable yields. The absence of imminent earnings reduces short-term risk for selected trades.",
+  "top_10_notes": [
+    {
+      "ticker": "AMD",
+      "comment": "Strong trending stock with high implied volatility and solid premium; balanced risk due to no immediate earnings and healthy liquidity."
+    },
+    {
+      "ticker": "ARM",
+      "comment": "Highest return on capital and premium yield with rich IV; risk lies in extreme IV percentile and high volatility environment."
+    },
+    {
+      "ticker": "AMZN",
+      "comment": "Lower premium and yield with neutral trend and low IV percentile, making it less attractive for aggressive income strategies."
+    },
+    {
+      "ticker": "ADBE",
+      "comment": "Lower premium and return with neutral trend and moderate implied volatility; earnings are somewhat near but no risk flagged."
+    }
+  ]
+}

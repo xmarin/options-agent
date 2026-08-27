@@ -1,0 +1,39 @@
+{
+  "report_date": "2026-04-06",
+  "best_trade": {
+    "ticker": "MU",
+    "reason": "Micron (MU) offers a high return on capital (1.27%) with strong option volume and open interest, indicating good liquidity. It has no earnings risk and a favorable implied volatility percentile (88.5), suggesting options premiums are rich. The stock is near key moving averages with a neutral trend.",
+    "biggest_risk": "Potential downside risk if the stock price drops sharply given the near-the-money strike and moderate delta exposure."
+  },
+  "overall_summary": "This week\u2019s top candidates rank highly due to a mix of decent premiums relative to capital required, good liquidity in option markets, and limited immediate earnings risk. Most underlying stocks show neutral to slightly positive trends, but some offer lower yields or wider spreads that dilute attractiveness. Earnings dates beyond the weekly options horizon reduce risk exposure in these picks.",
+  "top_10_notes": [
+    {
+      "ticker": "MU",
+      "comment": "Highest return on capital and strong liquidity; favorable IV percentile makes premium attractive; no earnings risk."
+    },
+    {
+      "ticker": "UNH",
+      "comment": "Good premium and return but closer to earnings in 15 days which adds some future uncertainty."
+    },
+    {
+      "ticker": "ASML",
+      "comment": "High capital required and lower annual yield; low IV percentile reduces premium attractiveness despite solid liquidity."
+    },
+    {
+      "ticker": "CVNA",
+      "comment": "Moderate premiums but weaker trend and some volatility; good liquidity but lower final score."
+    },
+    {
+      "ticker": "AMAT",
+      "comment": "Positive short-term trend but moderate return and somewhat wide option spreads."
+    },
+    {
+      "ticker": "LRCX",
+      "comment": "Reasonable premium and trend but overall lower score and wider spread reduce desirability."
+    },
+    {
+      "ticker": "GS",
+      "comment": "Low return on capital with earnings just one week post expiration; low IV percentile limits premium size."
+    }
+  ]
+}

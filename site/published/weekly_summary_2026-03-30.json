@@ -1,0 +1,19 @@
+{
+  "report_date": "2026-03-30",
+  "best_trade": {
+    "ticker": "AMD",
+    "reason": "AMD offers a higher return on capital with a decent premium, lower spread percentage, and very high implied volatility percentile, enhancing premium value. The trade is set well before earnings, reducing event risk.",
+    "biggest_risk": "The stock could rally above the strike price, leading to assignment and potential missed upside above $210."
+  },
+  "overall_summary": "The candidates rank highly due to attractive weekly premiums driven by elevated implied volatility and relatively stable prices. Most names avoid imminent earnings to reduce volatility risk. AMD stands out with the best combination of return, liquidity, and IV percentile. CRWD has wider spreads and slightly lower premiums relative to capital, making it less appealing.",
+  "top_10_notes": [
+    {
+      "ticker": "AMD",
+      "comment": "High IV percentile (100%) and good liquidity with solid return, neutral trend, no earnings risk this week."
+    },
+    {
+      "ticker": "CRWD",
+      "comment": "Lower IV percentile at 50%, wider spread, lower return on capital, and neutral trend."
+    }
+  ]
+}

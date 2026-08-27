@@ -1,0 +1,51 @@
+{
+  "report_date": "2026-04-12",
+  "best_trade": {
+    "ticker": "MU",
+    "reason": "MU offers a high return on capital (1.53%) with strong liquidity, high implied volatility percentile at 73.9%, and balanced delta and OTM positioning, making it a lucrative weekly covered call without earnings risk this week.",
+    "biggest_risk": "Potential downside from a neutral trend and a slight price premium may be given up if the stock rerates or trending changes unexpectedly."
+  },
+  "overall_summary": "This week's top covered call candidates rank highly due to their good balance of premium yield, liquidity, and minimal earnings risk. Semiconductor stocks dominate the list, reflecting attractive volatilities and option premiums. The selections are generally well out-of-the-money for modest premium collection while preserving upside potential. Stocks with weaker trends or lower liquidity, like BLK and AMAT, are less desirable despite decent premiums. META's very low IV percentile and lower return make it less appealing overall.",
+  "top_10_notes": [
+    {
+      "ticker": "ASML",
+      "comment": "Strong premium with high capital requirement; decent scores but low liquidity constrains flexibility."
+    },
+    {
+      "ticker": "MU",
+      "comment": "High liquidity and good premium yield with balanced delta; a leading semiconductor name making it attractive."
+    },
+    {
+      "ticker": "AMD",
+      "comment": "Strong uptrend and large volume, but lower IV percentile limits premium; earnings over 3 weeks away reduces risk."
+    },
+    {
+      "ticker": "BLK",
+      "comment": "Relatively low yield and poor liquidity although premium scores are good; cautious due to high strike proximity."
+    },
+    {
+      "ticker": "COIN",
+      "comment": "Good liquidity and premium with moderate OTM, but 20-day negative return hints at recent weakness."
+    },
+    {
+      "ticker": "AMAT",
+      "comment": "Uptrend and moderate premium but very low liquidity and relatively lower yield reduce attractiveness."
+    },
+    {
+      "ticker": "NET",
+      "comment": "Highest annual yield and IV percentile indicates good premiums, but negative 20-day return and moderate liquidity present risks."
+    },
+    {
+      "ticker": "CVNA",
+      "comment": "Stable premium and modest volume with neutral trend; liquidity and volume are somewhat limited."
+    },
+    {
+      "ticker": "LRCX",
+      "comment": "Decent premia and volume, but a moderate annual yield and recent positive trend with some price weakness."
+    },
+    {
+      "ticker": "META",
+      "comment": "Large liquidity but very low IV percentile and lowest annual yield make this less compelling despite decent volume."
+    }
+  ]
+}

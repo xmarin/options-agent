@@ -1,0 +1,51 @@
+{
+  "report_date": "2026-04-27",
+  "best_trade": {
+    "ticker": "MU",
+    "reason": "MU offers the highest weekly income estimate and return on capital (3.83%) with strong liquidity, high implied volatility percentile (80.8%), and no earnings risk this week. The stock is in a strong uptrend with recent strong price momentum, making it the most balanced and attractive candidate for covered call income.",
+    "biggest_risk": "The biggest risk is potential stock price appreciation beyond the 530 strike which would lead to assignment, limiting further upside beyond the strike price."
+  },
+  "overall_summary": "Top candidates are ranked highly due to their combination of strong weekly premiums, good liquidity, favorable implied volatility, and generally avoiding immediate earnings risk. Most stocks are in uptrends or have solid technicals. However, several top names face earnings events within 1-2 days (META, MSFT, GOOGL, AMZN), introducing uncertainty and risk. MU stands out with no earnings risk, strong trend, high premiums, and desirable option metrics.",
+  "top_10_notes": [
+    {
+      "ticker": "MU",
+      "comment": "Highest income and return on capital with strong trend and no earnings risk; excellent liquidity and IV percentile."
+    },
+    {
+      "ticker": "QCOM",
+      "comment": "Good liquidity and IV percentile; neutral trend but no earnings risk."
+    },
+    {
+      "ticker": "INTC",
+      "comment": "Uptrend with no near earnings risk and a strong IV percentile; moderate premium."
+    },
+    {
+      "ticker": "META",
+      "comment": "High premium but immediate earnings risk in 2 days; stock could be volatile and premium may drop post earnings."
+    },
+    {
+      "ticker": "NVDA",
+      "comment": "Strong liquidity but very low IV percentile and lower premium yield; earnings event still 23 days away, reducing immediate risk."
+    },
+    {
+      "ticker": "GOOGL",
+      "comment": "Decent liquidity and premium but immediate earnings risk; moderate IV percentile."
+    },
+    {
+      "ticker": "MSFT",
+      "comment": "Good liquidity and premium; earnings risk in 2 days and lower annual yield."
+    },
+    {
+      "ticker": "COIN",
+      "comment": "Reasonable premium and IV percentile with no earnings risk this week; lower liquidity makes it less attractive."
+    },
+    {
+      "ticker": "PLTR",
+      "comment": "Low premium yield and lower IV percentile; no immediate earnings risk but very neutral trend."
+    },
+    {
+      "ticker": "AMZN",
+      "comment": "Decent premium with earnings in 2 days; earnings risk makes it less desirable despite strong trend."
+    }
+  ]
+}

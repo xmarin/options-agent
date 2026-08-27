@@ -1,0 +1,51 @@
+{
+  "report_date": "2026-04-13",
+  "best_trade": {
+    "ticker": "COIN",
+    "reason": "COIN offers the highest weekly return on capital (2.92%) with solid option liquidity and a balanced risk profile. It also has no immediate earnings risk and a high IV percentile suggesting decent premium pricing.",
+    "biggest_risk": "Its recent price trend is neutral with a negative 20-day return, indicating potential short-term weakness or volatility."
+  },
+  "overall_summary": "The top candidates this week are generally well-balanced with good premiums and liquidity. Most have no earnings risk within the very short timeframe except NFLX which carries earnings risk imminent. High implied volatility and good open interest support premium collection in these names. However, trends vary with some showing short-term weakness which could affect price stability and assignment risk.",
+  "top_10_notes": [
+    {
+      "ticker": "COIN",
+      "comment": "Highest weekly return on capital and strong liquidity; no earnings risk nearby."
+    },
+    {
+      "ticker": "MRVL",
+      "comment": "Strong uptrend and high liquidity, but modest weekly return and no earnings date soon."
+    },
+    {
+      "ticker": "INTC",
+      "comment": "Very liquid with a good premium and uptrend, earnings just outside the week posing little risk."
+    },
+    {
+      "ticker": "PLTR",
+      "comment": "Good premium and liquidity but negative recent price return and neutral trend."
+    },
+    {
+      "ticker": "MU",
+      "comment": "Reasonable liquidity and premium but highest capital requirement and neutral/slightly negative trend."
+    },
+    {
+      "ticker": "AMD",
+      "comment": "Uptrend and decent premium but low annual yield and earnings about 3 weeks away."
+    },
+    {
+      "ticker": "META",
+      "comment": "High liquidity and significant premium but low IV percentile and neutral price trend."
+    },
+    {
+      "ticker": "NET",
+      "comment": "Very high IV percentile suggesting expensive options but poor liquidity and negative short-term return."
+    },
+    {
+      "ticker": "AVGO",
+      "comment": "Neutral trend and liquidity with modest premium; no earnings risk."
+    },
+    {
+      "ticker": "NFLX",
+      "comment": "Earnings risk imminent in 3 days, lowering desirability despite good liquidity and premium."
+    }
+  ]
+}

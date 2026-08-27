@@ -1,0 +1,51 @@
+{
+  "report_date": "2026-05-27",
+  "best_trade": {
+    "ticker": "SNOW",
+    "reason": "SNOW offers the highest annual yield at 1.4231% with solid liquidity and no earnings risk, supported by a strong 20-day return and very high implied volatility percentile, enhancing premium income potential.",
+    "biggest_risk": "The high implied volatility and RSI near 79 indicate SNOW is overbought, which may lead to price corrections and potential assignment risk."
+  },
+  "overall_summary": "Top candidates rank highly due to strong premium yields, solid liquidity, favorable deltas near target, absence of imminent earnings to mitigate risk, and predominantly upward or neutral trends. The high implied volatility in many stocks boosts premiums but also increases risk. Names with extremely high beta or stretched RSI values indicate potential volatility that could be risky for covered calls.",
+  "top_10_notes": [
+    {
+      "ticker": "AMD",
+      "comment": "High scores driven by strong upward trend, high volume, and very good annualized return; however, the RSI above 78 and high beta suggest overbought conditions and price risk."
+    },
+    {
+      "ticker": "AVGO",
+      "comment": "Solid premium yield with steady price and no earnings risk; moderate volume and IV percentile support the trade but overall return is slightly lower than AMD."
+    },
+    {
+      "ticker": "QCOM",
+      "comment": "Strong volume and high IV percentile provide good liquidity and premium potential; moderate OTM strike gives some buffer but high HV rank hints at volatility risk."
+    },
+    {
+      "ticker": "SNOW",
+      "comment": "Highest annual yield with good liquidity and no earnings risk; very high IV percentile and volume make it attractive but overbought RSI and price stretch could trigger reversal."
+    },
+    {
+      "ticker": "INTC",
+      "comment": "Good liquidity with decent annual yield, and safe from immediate earnings risk; moderate RSI suggests reasonable price stability."
+    },
+    {
+      "ticker": "GOOGL",
+      "comment": "Low implied volatility and lower premium yield diminish its attractiveness despite low earnings risk and uptrend."
+    },
+    {
+      "ticker": "NVDA",
+      "comment": "Strong liquidity and decent premium but neutral trend and declining short-term returns reduce momentum bullishness."
+    },
+    {
+      "ticker": "NOW",
+      "comment": "Moderate yields with strong liquidity but neutral trend and lower premium score than top names limit appeal."
+    },
+    {
+      "ticker": "CRM",
+      "comment": "Stable but neutral trend with slightly below average annual yield and moderate liquidity; moderate price risk due to falling short-term return."
+    },
+    {
+      "ticker": "QQQ",
+      "comment": "Strong liquidity and volume but very low premium yield and low implied volatility percentile make it the least attractive among the candidates."
+    }
+  ]
+}

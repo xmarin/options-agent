@@ -15,9 +15,10 @@ SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY", "")
 
 # ── Edit this to match your current Schwab positions ──────────────────────────
 CORRECT_POSITIONS = [
-    {"ticker": "INTC", "shares": 50,  "avg_cost": 90.55,  "total_cost": 4527.50},
+    {"ticker": "AMD",  "shares": 20,  "avg_cost": 475.91, "total_cost": 9518.20},
+    {"ticker": "INTC", "shares": 100, "avg_cost": 98.48,  "total_cost": 9848.00},
+    {"ticker": "NFLX", "shares": 100, "avg_cost": 94.86,  "total_cost": 9486.00},
     {"ticker": "HIMS", "shares": 200, "avg_cost": 39.46,  "total_cost": 7892.00},
-    {"ticker": "NFLX", "shares": 100, "avg_cost": 94.865, "total_cost": 9486.50},
 ]
 # ─────────────────────────────────────────────────────────────────────────────
 

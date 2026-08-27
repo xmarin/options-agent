@@ -1,0 +1,23 @@
+{
+  "report_date": "2026-05-22",
+  "best_trade": {
+    "ticker": "ZS",
+    "reason": "ZS offers the highest weekly return on capital (3.21%) with strong implied volatility at 115.16%, excellent liquidity, and a solid uptrend supported by recent technicals and momentum indicators. The high IV percentile and premium score make it ideal for covered call income.",
+    "biggest_risk": "The main risk is ZS's high RSI at 79 indicating it may be overbought, which could lead to a pullback that reduces premium income potential."
+  },
+  "overall_summary": "The top candidates rank highly primarily due to a combination of strong premium returns, favorable implied volatility conditions, liquidity, and technical trends. ZS stands out due to its superior return and volatility environment. TSLA is liquid and trending up but offers lower yields and has a lower IV percentile. XOM is more neutral with lower returns and liquidity concerns.",
+  "top_10_notes": [
+    {
+      "ticker": "ZS",
+      "comment": "Ranked highest due to high weekly return, top IV percentile, strong uptrend, and excellent premium scores\u2014ideal for covered calls."
+    },
+    {
+      "ticker": "TSLA",
+      "comment": "Highly liquid and trending up with moderate premiums, but lower IV percentile and return on capital limit income potential."
+    },
+    {
+      "ticker": "XOM",
+      "comment": "Lower return and liquidity with a neutral trend; less desirable given lower premium and IV percentile despite stable earnings risk."
+    }
+  ]
+}

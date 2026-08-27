@@ -1,0 +1,15 @@
+{
+  "report_date": "2026-04-09",
+  "best_trade": {
+    "ticker": "META",
+    "reason": "META offers a balanced weekly covered call with decent premium yield (0.62% weekly return) and moderate delta (0.252) indicating a good chance of option decay with limited assignment risk. The stock is trading near its 20-day average with a neutral trend, and earnings are not imminent, reducing volatility and earnings risk.",
+    "biggest_risk": "A sudden rally in META ahead of earnings or due to unexpected positive news could lead to assignment and missed upside participation because the strike price is slightly out of the money."
+  },
+  "overall_summary": "This week, the top candidates are ranked based on balanced premium yield, delta positioning, liquidity, and minimal earnings risk. META stands out due to its stable price movement, good premium generation, and no immediate earnings event increasing the probability of collecting premium without assignment.",
+  "top_10_notes": [
+    {
+      "ticker": "META",
+      "comment": "Strong premium relative to risk with neutral trend and no earnings risk in the week, making it attractive for covered calls."
+    }
+  ]
+}

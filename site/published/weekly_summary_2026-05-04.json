@@ -1,0 +1,51 @@
+{
+  "report_date": "2026-05-04",
+  "best_trade": {
+    "ticker": "ON",
+    "reason": "ON offers the highest weekly return on capital at 4.07%, has a strong uptrend, very high implied volatility (IV 1.0145) implying rich premium, no earnings risk this week, and a balanced OTM and delta profile making it a favorable covered call candidate.",
+    "biggest_risk": "Lower liquidity compared to top names which could lead to wider spreads and less efficient execution."
+  },
+  "overall_summary": "These names ranked highly due to strong premiums, favorable delta and OTM positioning relative to underlying trends, and low earnings risk for most. High implied volatility and good liquidity contributed positively to rankings. Names with earnings events in this short DTE window pose higher risk despite premiums.",
+  "top_10_notes": [
+    {
+      "ticker": "MU",
+      "comment": "Top score with strong uptrend, high premium, good liquidity, and no earnings risk, making it a solid balanced trade."
+    },
+    {
+      "ticker": "COIN",
+      "comment": "High implied volatility and premium but carries earnings risk in 3 days which increases uncertainty."
+    },
+    {
+      "ticker": "ON",
+      "comment": "Very high premium and return, no earnings risk, strong trend, but lower liquidity which could affect execution."
+    },
+    {
+      "ticker": "INTC",
+      "comment": "Good liquidity and no earnings near term, modest premium but solid trend and volume."
+    },
+    {
+      "ticker": "PLTR",
+      "comment": "Decent premium but neutral trend, earnings risk today makes position riskier."
+    },
+    {
+      "ticker": "TSLA",
+      "comment": "Lower premium yield and IV percentile, neutral trend, but very good liquidity reduces execution risk."
+    },
+    {
+      "ticker": "CRWD",
+      "comment": "Low premium yield, moderate IV and liquidity, but strong uptrend and no earnings risk."
+    },
+    {
+      "ticker": "MRVL",
+      "comment": "Modest premium with solid trend and no earnings risk, but low volume and liquidity."
+    },
+    {
+      "ticker": "ORCL",
+      "comment": "Low premium and low OTM, moderate liquidity, no earnings risk, stable uptrend."
+    },
+    {
+      "ticker": "HOOD",
+      "comment": "Low premium yield with neutral trend, no earnings risk, good liquidity but less upside potential."
+    }
+  ]
+}

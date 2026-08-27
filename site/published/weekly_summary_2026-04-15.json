@@ -1,0 +1,51 @@
+{
+  "report_date": "2026-04-15",
+  "best_trade": {
+    "ticker": "MU",
+    "reason": "MU offers the highest return on capital (2.86%) with strong premium, high IV percentile (85.2%) enhancing option premium, solid liquidity, no earnings risk, and a neutral trend which is appropriate for income strategy.",
+    "biggest_risk": "Market volatility causing stock price to exceed the strike significantly, leading to assignment risk and potential loss of upside."
+  },
+  "overall_summary": "This week's top covered call candidates show a preference for semiconductor and tech names with relatively high implied volatility and solid liquidity. Most stocks avoid immediate earnings risk reducing volatility spikes. Names like TSLA have earnings risk and META offers lower yield due to low IV. MU stands out with top combination of yield, liquidity, and risk profile.",
+  "top_10_notes": [
+    {
+      "ticker": "MU",
+      "comment": "High IV percentile and premium yield with no earnings risk; neutral trend supports stable income strategy."
+    },
+    {
+      "ticker": "TSLA",
+      "comment": "Good volume and liquidity but earnings risk next week reduces attractiveness for covered calls."
+    },
+    {
+      "ticker": "AMD",
+      "comment": "Strong uptrend and liquidity, no earnings risk, decent premium but lower IV and yield."
+    },
+    {
+      "ticker": "COIN",
+      "comment": "Highest IV percentile (90.7%) supports premium but 20-day negative return and moderate liquidity warrant caution."
+    },
+    {
+      "ticker": "ORCL",
+      "comment": "Stable neutral trend, good liquidity, no earnings risk, moderate yield."
+    },
+    {
+      "ticker": "META",
+      "comment": "Lower IV percentile causing low premium and yield, despite good liquidity and no earnings risk."
+    },
+    {
+      "ticker": "MRVL",
+      "comment": "Strong uptrend and decent yield but lower liquidity and wider bid-ask spread reduce desirability."
+    },
+    {
+      "ticker": "PLTR",
+      "comment": "No earnings risk, neutral trend, moderate liquidity, but relatively lower premium and yield."
+    },
+    {
+      "ticker": "MSFT",
+      "comment": "Large volume and liquidity but very low IV percentile limits premium and yield."
+    },
+    {
+      "ticker": "NVDA",
+      "comment": "Strong liquidity and no earnings risk but low IV percentile and yield make it less attractive."
+    }
+  ]
+}

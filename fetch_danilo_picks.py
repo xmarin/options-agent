@@ -117,18 +117,6 @@ def main() -> int:
         )
         print(f"Saved dated copy: {dated_path}")
 
-        # Update manifest with Danilo pick history
-        manifest_path = OUT_PATH.parent / "reports_manifest.json"
-        try:
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
-            danilo_reports = manifest.get("danilo_reports", [])
-            if dated_name not in [r["file"] for r in danilo_reports]:
-                danilo_reports.insert(0, {"date": report_date, "file": dated_name})
-            manifest["danilo_reports"] = danilo_reports
-            manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-        except Exception as me:
-            print(f"fetch_danilo_picks: could not update manifest — {me}")
-
     except Exception as e:
         print(f"fetch_danilo_picks: WARNING - {e}; keeping previous file")
 

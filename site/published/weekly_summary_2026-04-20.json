@@ -1,0 +1,51 @@
+{
+  "report_date": "2026-04-20",
+  "best_trade": {
+    "ticker": "HOOD",
+    "reason": "HOOD offers the highest annual yield at 1.5187% with a good balance of premium, delta, and liquidity. It is close to earnings but not within immediate risk, its OTM is modest, and it has strong volume and open interest, supporting easy execution and exit.",
+    "biggest_risk": "Earnings announcement is in 8 days, which could cause volatility and adverse price movement impacting the covered call strategy."
+  },
+  "overall_summary": "This week's top candidates rank highly due to a blend of attractive weekly income, solid liquidity, balanced deltas near target 0.3, and mostly no immediate earnings risk. Stocks like MU and TSLA show higher returns and premiums but have more neutral trends or direct earnings events, increasing uncertainty.",
+  "top_10_notes": [
+    {
+      "ticker": "AMD",
+      "comment": "Strong uptrend with good liquidity and no earnings risk. Moderate return on capital."
+    },
+    {
+      "ticker": "MU",
+      "comment": "High premium and annual yield but neutral trend and mid IV percentile, though no earnings risk."
+    },
+    {
+      "ticker": "HOOD",
+      "comment": "Highest yield candidate with balanced scores and good liquidity, slight earnings risk later in week."
+    },
+    {
+      "ticker": "ORCL",
+      "comment": "Neutral trend, good liquidity, and stable implied volatility. Low return but solid all-around option metrics."
+    },
+    {
+      "ticker": "TSLA",
+      "comment": "High premium and yield, excellent liquidity, but immediate earnings risk in 2 days lowers desirability."
+    },
+    {
+      "ticker": "PLTR",
+      "comment": "Good liquidity and annual yield but weaker recent price trend and lower IV percentile."
+    },
+    {
+      "ticker": "META",
+      "comment": "Low annual yield relative to price, neutral trend, and upcoming earnings in 9 days."
+    },
+    {
+      "ticker": "SNOW",
+      "comment": "Strong annual yield and decent premium but lower liquidity and negative 20-day return."
+    },
+    {
+      "ticker": "MSFT",
+      "comment": "Low return and low IV percentile; solid liquidity but less rewarding relative to capital requirement."
+    },
+    {
+      "ticker": "COIN",
+      "comment": "Fair premium with very high IV percentile suggesting expensive options; decent liquidity but large OTM distance and neutral trend."
+    }
+  ]
+}

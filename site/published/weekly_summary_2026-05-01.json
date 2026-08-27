@@ -1,0 +1,51 @@
+{
+  "report_date": "2026-05-01",
+  "best_trade": {
+    "ticker": "MU",
+    "reason": "MU offers a strong combination of good liquidity, no earnings risk, an upward trend, and a decent return on capital with low OTM strike, making it a balanced, income-focused covered call candidate.",
+    "biggest_risk": "Moderate price movement could reduce premium capture or lead to assignment, especially if unexpected events occur since implied volatility is relatively high."
+  },
+  "overall_summary": "This week's top covered-call candidates rank highly due to their strong premiums, liquidity, and return on capital metrics with most stocks in a positive trend and reasonable risk profiles. Earnings risk is a key factor filtering out aggressive plays. AMD stands out for premium but carries earnings risk soon after expiration, which is undesirable. Most other names have balanced profiles with moderate premiums and manageable risks.",
+  "top_10_notes": [
+    {
+      "ticker": "AMD",
+      "comment": "High premium and return but strong earnings risk just 4 days before expiration, increasing unpredictability."
+    },
+    {
+      "ticker": "MU",
+      "comment": "No earnings risk and good liquidity with a solid premium, making it a reliable income trade."
+    },
+    {
+      "ticker": "TSLA",
+      "comment": "Neutral trend with low IV percentile and modest premium; safe but lower return on capital."
+    },
+    {
+      "ticker": "INTC",
+      "comment": "Strong volume and trend without earnings risk, though premium scores and return are moderate."
+    },
+    {
+      "ticker": "ARM",
+      "comment": "High implied volatility and no earnings risk, but lower liquidity and moderate premium score."
+    },
+    {
+      "ticker": "NVDA",
+      "comment": "Excellent liquidity but relatively low premium and earnings further out introduce moderate risk."
+    },
+    {
+      "ticker": "HOOD",
+      "comment": "Good premium and delta, but liquidity is weaker, and stock is sideways trending."
+    },
+    {
+      "ticker": "BABA",
+      "comment": "Neutral trend and low IV percentile, reducing premium potential despite no earnings risk."
+    },
+    {
+      "ticker": "AMZN",
+      "comment": "Uptrend with good liquidity but low premium and low IV, yielding less income."
+    },
+    {
+      "ticker": "ORCL",
+      "comment": "Moderate premium and liquidity, stable but less attractive compared to higher return stocks."
+    }
+  ]
+}
