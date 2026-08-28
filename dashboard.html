@@ -429,7 +429,12 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       <div class="panel">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
           <h2>Danilo's eToro Agent — Weekly Watchlist</h2>
-          <span id="daniloMeta" style="font-size:.8rem;color:var(--muted);">—</span>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <select id="daniloDateSelect" style="background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.85rem;cursor:pointer;">
+              <option value="">Loading history…</option>
+            </select>
+            <span id="daniloMeta" style="font-size:.8rem;color:var(--muted);">—</span>
+          </div>
         </div>
         <p style="color:var(--muted);font-size:.88rem;margin-bottom:14px;">
           Directional stock picks from Danilo's autonomous eToro agent (5-layer analysis, 0–8 scoring).
@@ -777,19 +782,51 @@ create policy "Allow all" on public.trades for all using (true) with check (true
   /* ═══════════════════════════════════════════
      DANILO'S AGENT TAB
   ═══════════════════════════════════════════ */
-  const DANILO_PICKS_URL = `published/danilo_picks_latest.json?t=${Date.now()}`;
-  const MY_PICKS_URL     = `published/picks_latest.json?t=${Date.now()}`;
+  const MY_PICKS_URL = `published/picks_latest.json?t=${Date.now()}`;
   let _daniloInitialized = false;
 
   async function initDaniloTab() {
     if (_daniloInitialized) return;
     _daniloInitialized = true;
 
-    if (supabaseConfigured && !_session) return; // auth wall handles display
+    if (supabaseConfigured && !_session) return;
+
+    // Load manifest to populate dropdown
+    const sel = document.getElementById('daniloDateSelect');
+    try {
+      const r = await fetch(`published/reports_manifest.json?t=${Date.now()}`);
+      if (r.ok) {
+        const manifest = await r.json();
+        const reports = manifest.danilo_reports || [];
+        if (reports.length > 0) {
+          sel.innerHTML = reports.map((rpt, i) =>
+            `<option value="${esc(rpt.file)}"${i === 0 ? ' selected' : ''}>${esc(rpt.date)}</option>`
+          ).join('');
+          sel.addEventListener('change', () => loadDaniloForKey(sel.value));
+        } else {
+          sel.innerHTML = '<option value="">No history yet</option>';
+        }
+      }
+    } catch(e) {
+      sel.innerHTML = '<option value="">Could not load history</option>';
+    }
+
+    // Load latest picks
+    await loadDaniloForKey('danilo_picks_latest.json');
+  }
+
+  async function loadDaniloForKey(fileKey) {
+    if (!fileKey) return;
+    document.getElementById('daniloPicksWrap').innerHTML = '<p style="color:var(--muted)">Loading…</p>';
+    document.getElementById('daniloDiscardPanel').style.display = 'none';
+    document.getElementById('daniloEmptyPanel').style.display = 'none';
 
     let danilo = null, mine = null;
-    try { const r = await fetch(DANILO_PICKS_URL); if (r.ok) danilo = await r.json(); } catch(e) {}
-    try { const r = await fetch(MY_PICKS_URL);     if (r.ok) mine   = await r.json(); } catch(e) {}
+    try {
+      const r = await fetch(`published/${fileKey}?t=${Date.now()}`);
+      if (r.ok) danilo = await r.json();
+    } catch(e) {}
+    try { const r = await fetch(MY_PICKS_URL); if (r.ok) mine = await r.json(); } catch(e) {}
 
     if (!danilo || !Array.isArray(danilo.picks) || danilo.picks.length === 0) {
       document.getElementById('daniloEmptyPanel').style.display = 'block';
@@ -798,8 +835,7 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     }
 
     const myTickers = new Set((mine?.picks || []).map(p => p.ticker));
-    document.getElementById('daniloMeta').textContent =
-      `Report: ${danilo.report_date || '—'}${danilo.source_file ? ' · ' + danilo.source_file : ''}`;
+    document.getElementById('daniloMeta').textContent = `Report: ${danilo.report_date || '—'}`;
     renderDaniloPicks(danilo.picks, myTickers);
     renderDaniloDiscards(danilo.descartados || []);
   }
