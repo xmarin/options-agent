@@ -1,52 +1,52 @@
 {
   "report_date": "2026-09-01",
-  "last_week_recap": "No data provided about last week's trade outcomes, so no recap can be given.",
+  "last_week_recap": "",
   "best_trade": {
-    "ticker": "AMD",
-    "reason": "Although AMD is not in the top 10 ranked candidates this week, it is currently owned by the investor, which allows immediate covered call selling without additional capital. The top 10 candidates are mostly not owned by the investor, and none of them dramatically outscore owned position advantages on multiple metrics. Given the investor's preference for owned stocks unless a non-owned stock is clearly superior, AMD remains the best choice for weekly covered-call income.",
-    "biggest_risk": "Stock price volatility in AMD could lead to early assignment risk or negative price moves that reduce the covered call premium gains."
+    "ticker": "NFLX",
+    "reason": "Although not appearing in this week's top 10, NFLX is already owned by the investor and provides comfort in selling covered calls on familiar stock. Preference is given to owned stocks unless another candidate clearly beats across all scoring metrics. Since none of this week\u2019s top 10 calls are on owned stocks and the scores are not dramatically better, sticking with NFLX covers risk and ensures no additional capital outlay.",
+    "biggest_risk": "Potential missed opportunity for higher premium yields this week from non-owned names with higher volatility and premium scores."
   },
-  "overall_summary": "This week's top 10 candidates mostly feature strong premiums and decent annual yields with low earnings risk and positive or neutral trends. However, since the investor already owns AMD, INTC, NFLX, and HIMS\u2014even though these stocks did not make this week's top 10\u2014selling covered calls on these remains more capital efficient and aligned with strategy. The top ranked stocks like PANW and AVGO show attractive premiums and returns but require significant capital and are not currently held, making them less suitable under the investor's preference rules. Several names are neutral to trending up with low earnings risk, making them safe but not substantially better than owned stocks. The recommendation is to proceed with the best owned-stock covered call, AMD.",
+  "overall_summary": "This week\u2019s top trading candidates mostly feature high volatility and solid premium returns but none are owned by the investor. The investor currently owns AMD, INTC, NFLX, and HIMS, though these did not rank in the top 10 this week, suggesting moderate premium opportunities. Among the top 10, PANW and DELL rank highest on premium and score but require additional capital. The trends for most stocks are positive or neutral, with low earnings risk, but the large capital requirement and lack of ownership weigh against choosing these.",
   "top_10_notes": [
     {
       "ticker": "PANW",
-      "comment": "High premium with solid annual yield and no earnings risk but not currently owned and requires a large capital outlay."
-    },
-    {
-      "ticker": "AVGO",
-      "comment": "Strong delta and premium, very liquid, neutral trend; attractive but not owned."
+      "comment": "High premium with good return on capital and strong uptrend; however, not currently owned and requires significant capital."
     },
     {
       "ticker": "CRWD",
-      "comment": "Uptrend and high volume, good liquidity, solid premium but not owned."
+      "comment": "Strong liquidity and premium with uptrend but not currently owned; capital requirement is moderate."
     },
     {
       "ticker": "DELL",
-      "comment": "Good premium and ROI but very high capital required and neutral trend; not owned."
+      "comment": "Highest premium and annual yield among the group, but trend is neutral and requires large capital outlay, plus not an owned position."
     },
     {
-      "ticker": "MRVL",
-      "comment": "Decent premium and delta with neutral trend; not owned."
-    },
-    {
-      "ticker": "MU",
-      "comment": "Lower return on capital and lower IV percentile, neutral trend; not owned."
+      "ticker": "AVGO",
+      "comment": "Stable neutral trend with decent premium and strong liquidity but not owned and some negative recent returns."
     },
     {
       "ticker": "PLTR",
-      "comment": "Uptrend and improving returns, but low premium and distant earnings; not owned."
+      "comment": "Highest recent return and strong uptrend, excellent liquidity, but low premium and owned position is not current."
     },
     {
       "ticker": "NOW",
-      "comment": "Good delta and premium, uptrend but lower liquidity; not owned."
+      "comment": "Uptrend with good liquidity and modest premium, not owned."
     },
     {
-      "ticker": "META",
-      "comment": "Moderate premium with low IV percentile and neutral trend; not owned."
+      "ticker": "MU",
+      "comment": "Moderate premium with neutral trend and relatively high beta, not owned."
     },
     {
       "ticker": "COIN",
-      "comment": "Uptrend and decent premium but relatively low liquidity; not owned."
+      "comment": "Good recent return and positive trend; moderate premium and medium liquidity; not owned."
+    },
+    {
+      "ticker": "CRM",
+      "comment": "Strong uptrend with good recent returns, moderate premium, not owned."
+    },
+    {
+      "ticker": "HOOD",
+      "comment": "Neutral trend, excellent liquidity, moderate premium, not owned."
     }
   ]
 }
