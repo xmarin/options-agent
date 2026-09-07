@@ -3,50 +3,50 @@
   "last_week_recap": "",
   "best_trade": {
     "ticker": "INTC",
-    "reason": "INTC is a top-ranked stock this week and importantly is already owned by the investor, allowing immediate covered call selling with no additional capital required. It has an attractive weekly return on capital of 1.62%, a strong liquidity profile with very high volume and open interest, and favorable out-of-the-money placement (4.38%). Its earnings risk is low with 45 days to next earnings, reducing unexpected volatility. The final score of 0.8354 is among the highest, reflecting a balanced risk-reward and solid premium collected.",
-    "biggest_risk": "The biggest risk is the beta of 3.723, indicating higher volatility which could lead to sharp downward moves causing the option premium to erode or sudden upward moves leading to assignment if the stock rises above the strike."
+    "reason": "INTC offers the highest return on capital at 2.21% weekly with strong liquidity and is owned by the investor, allowing immediate action without new capital. It also has no earnings risk this week, a solid delta close to the target, and a good balance of premium and OTM placement for income generation.",
+    "biggest_risk": "The biggest risk is a sudden price spike causing assignment, which could limit upside if the stock rises above the 98 strike by expiration."
   },
-  "overall_summary": "This week's top names show strong candidates primarily due to balanced option premium, reasonable out-of-the-money strikes, good liquidity, and low earnings risk. Among owned stocks, INTC and AMD rank highest, both offering solid premium and manageable risk profiles. Other stocks like DELL and MU show promising returns but require new capital outlay. The investor\u2019s existing holdings NFLX and HIMS did not appear in the top 10 this week and may have less attractive income opportunities currently. Conservative preference for owned stocks suggests INTC is best choice this week.",
+  "overall_summary": "This week's top candidates ranked highly due to strong premiums relative to capital, balanced delta exposure near 0.38, and manageable risk profiles without upcoming earnings events. Owned stocks AMD and INTC stand out, especially INTC with the best return on capital and liquidity. Non-owned names like DELL and MU offer slightly higher yields but require new capital. Other names like META have lower IV percentile, reducing premium opportunity. Overall, focusing on owned stocks like INTC maximizes ease and risk control.",
   "top_10_notes": [
     {
-      "ticker": "INTC",
-      "comment": "Owned stock with a good blend of premium, liquidity, and balanced risk making it highly actionable."
-    },
-    {
       "ticker": "AMD",
-      "comment": "Owned stock with a slightly lower return on capital than INTC, still a strong candidate with neutral trend and low earnings risk."
+      "comment": "Owned stock with solid premium and stable trend; a neutral setup with no earnings risk."
     },
     {
       "ticker": "DELL",
-      "comment": "Not owned, offers highest weekly return on capital (1.92%), good trend but requires new capital."
+      "comment": "Highest premium on list and strong trend but not currently owned, requiring capital to enter."
     },
     {
       "ticker": "MU",
-      "comment": "Not owned, high premium and yearly yield, strong volume but highest capital requirement and volatility risk."
+      "comment": "Good premium and annual yield but very high capital needed and not owned; lower liquidity."
     },
     {
-      "ticker": "ORCL",
-      "comment": "High annual yield (3.3%) and strong premium, but lower liquidity and not owned."
+      "ticker": "INTC",
+      "comment": "Owned stock with the highest weekly return on capital and good liquidity; no earnings risk."
     },
     {
       "ticker": "HOOD",
-      "comment": "Good premium and trend, moderate risk; not owned and moderate capital required."
+      "comment": "Strong annual yield, uptrend, and liquidity but not owned by the investor."
     },
     {
       "ticker": "COIN",
-      "comment": "Moderate return and increased spread %, not owned; watch liquidity."
-    },
-    {
-      "ticker": "CRWD",
-      "comment": "Lower return on capital and very high HV rank; caution advised."
-    },
-    {
-      "ticker": "MRVL",
-      "comment": "Moderate premium but lowest final score among top 10, not owned."
+      "comment": "Good premium with favorable IV but requires new capital and is not owned."
     },
     {
       "ticker": "META",
-      "comment": "Lowest return on capital and near-the-money strike; not owned and lower premium relative to price."
+      "comment": "Lower premium due to low IV percentile; not owned by investor."
+    },
+    {
+      "ticker": "ORCL",
+      "comment": "Highest annual yield and premium return but larger OTM strike and not owned."
+    },
+    {
+      "ticker": "CRWD",
+      "comment": "Lower yield and liquidity compared to others; not owned."
+    },
+    {
+      "ticker": "MRVL",
+      "comment": "Moderate premium and liquidity; not owned by investor."
     }
   ]
 }
