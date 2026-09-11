@@ -174,7 +174,7 @@
       <select id="reportSelect"></select>
       <button id="reloadBtn">Reload</button>
       <button id="authBtn" class="auth-btn" style="display:none;">Sign In</button>
-      <button class="log-btn" id="openLogBtn" style="display:none;">+ Log Trade</button>
+      <button class="log-btn" id="importSchwabBtn" style="display:none;background:var(--muted);color:#fff;">📤 Import Schwab</button>
     </div>
   </div>
 
@@ -287,65 +287,26 @@ create policy "Allow all" on public.trades for all using (true) with check (true
         <h2>Monthly Income Goal</h2>
         <span style="color:var(--muted);font-size:.85rem;">Target: <strong style="color:var(--text);">$4,000 / month</strong></span>
       </div>
-      <div class="stats-row" style="margin-bottom:12px;">
-        <div class="stat-card"><div class="val" id="ig-prem">—</div><div class="lbl">Premium Collected (this month)</div></div>
-        <div class="stat-card"><div class="val" id="ig-pnl">—</div><div class="lbl">Realized P&amp;L (this month)</div></div>
-        <div class="stat-card"><div class="val" id="ig-pct">—</div><div class="lbl">Goal Progress</div></div>
-        <div class="stat-card"><div class="val" id="ig-remaining">—</div><div class="lbl">Still Needed</div></div>
-      </div>
-      <div class="progress-bar-track">
-        <div id="igBar" class="progress-bar-fill" style="width:0%;"></div>
-      </div>
       <div id="incomeMonthlyTable"></div>
     </div>
 
-    <!-- Summary stat cards -->
-    <div class="stats-row" id="pnlStatCards">
-      <div class="stat-card"><div class="val" id="sc-total-pnl">—</div><div class="lbl">Total Realized P&amp;L</div></div>
-      <div class="stat-card"><div class="val" id="sc-win-rate">—</div><div class="lbl">Win Rate</div></div>
-      <div class="stat-card"><div class="val" id="sc-total-trades">—</div><div class="lbl">Total Trades</div></div>
-      <div class="stat-card"><div class="val" id="sc-avg-premium">—</div><div class="lbl">Avg Premium / Trade</div></div>
-      <div class="stat-card"><div class="val" id="sc-open-trades">—</div><div class="lbl">Open Positions</div></div>
-    </div>
-
-    <!-- Cumulative P&L Chart -->
+    <!-- Premium Revenue by Month -->
     <div class="panel">
-      <h2>Cumulative P&amp;L Over Time</h2>
+      <h2>Premium Revenue by Month</h2>
       <div class="chart-wrap"><canvas id="pnlChart"></canvas></div>
     </div>
 
-    <!-- Best Tickers + Position Sizing side-by-side -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;" class="two-col">
-      <div class="panel">
-        <h2>Best Performing Tickers</h2>
-        <div id="bestTickersTable">—</div>
-      </div>
-      <div class="panel">
-        <h2>Position Sizing Calculator</h2>
-        <div class="sizing-inputs">
-          <div class="form-group">
-            <label>Account Value ($)</label>
-            <input type="number" id="accountSize" value="50000" min="1000" style="width:140px;">
-          </div>
-          <div class="form-group">
-            <label>Max Risk per Trade (%)</label>
-            <input type="number" id="riskPct" value="10" min="1" max="100" style="width:100px;">
-          </div>
-          <button onclick="renderPositionSizing()">Calculate</button>
-        </div>
-        <div id="sizingResult" style="font-size:.88rem;color:var(--muted);">Load a report on the Weekly Picks tab first, then come back here.</div>
-      </div>
+    <!-- Calls Exercised (Assignments) -->
+    <div class="panel">
+      <h2>Calls Exercised (Assignments)</h2>
+      <p style="color:var(--muted);font-size:.88rem;margin-bottom:14px;">Months where a call was assigned and shares were sold at the strike.</p>
+      <div class="chart-wrap"><canvas id="assignChart"></canvas></div>
+      <div class="trades-table-wrap" id="assignTableWrap" style="margin-top:16px;"></div>
     </div>
 
     <!-- Trade History Table -->
     <div class="panel">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h2 style="margin:0;">Trade History</h2>
-        <div style="display:flex;gap:8px;">
-          <button class="log-btn" id="importSchwabBtn" style="display:none;background:var(--muted);color:#fff;">📤 Import Schwab</button>
-          <button class="log-btn" id="openLogBtn2" style="display:none;">+ Log New Trade</button>
-        </div>
-      </div>
+      <h2 style="margin-bottom:14px;">Trade History</h2>
       <input type="file" id="schwabFileInput" accept=".json" style="display:none;">
       <div class="trades-table-wrap" id="tradesTableWrap">
         <p style="color:var(--muted);font-size:.9rem;">Loading trades…</p>
@@ -687,7 +648,6 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     const btn = document.getElementById('authBtn');
     if (!btn || !supabaseConfigured) return;
     btn.style.display = 'inline-block';
-    const logBtns = [document.getElementById('openLogBtn'), document.getElementById('openLogBtn2')];
     const picksWall    = document.getElementById('picksAuthWall');
     const picksContent = document.getElementById('picksContent');
     const posWall      = document.getElementById('posAuthWall');
@@ -698,7 +658,6 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     if (_session) {
       btn.textContent = '✓ Sign Out';
       btn.classList.add('signed-in');
-      logBtns.forEach(b => { if (b) b.style.display = 'inline-block'; });
       if (importBtn)    importBtn.style.display    = 'inline-block';
       if (picksWall)    picksWall.style.display    = 'none';
       if (picksContent) picksContent.style.display = 'block';
@@ -710,7 +669,6 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     } else {
       btn.textContent = 'Sign In';
       btn.classList.remove('signed-in');
-      logBtns.forEach(b => { if (b) b.style.display = 'none'; });
       if (importBtn)    importBtn.style.display    = 'none';
       if (picksWall)    picksWall.style.display    = 'block';
       if (picksContent) picksContent.style.display = 'none';
@@ -723,7 +681,6 @@ create policy "Allow all" on public.trades for all using (true) with check (true
 
   const MANIFEST_URL    = `published/reports_manifest.json?t=${Date.now()}`;
   const LIVE_OVERLAY_URL = `published/live_overlay.json?t=${Date.now()}`;
-  const TRADE_HISTORY_URL = `published/trade_history.json?t=${Date.now()}`;
 
   /* ═══════ Shared state ═══════ */
   let _currentReportRows = [];   // rows from last loaded CSV scan
@@ -1071,48 +1028,18 @@ create policy "Allow all" on public.trades for all using (true) with check (true
 
     const trades = await loadAllTrades();
     renderIncomeGoalTracker(trades);
-    renderPnLStats(trades);
-    renderPnLChart(trades);
-    renderBestTickersTable(trades);
+    renderPremiumPieChart(trades);
+    renderAssignmentsPanel(trades);
     renderTradesTable(trades);
-    renderPositionSizing();
   }
 
   async function loadAllTrades() {
+    // Supabase `trades` is the single source of truth. (A legacy published
+    // trade_history.json, built from a stale local CSV, used to be merged in
+    // here too -- it duplicated trades already in Supabase and mixed in a
+    // different P&L definition that included underlying stock gains, which
+    // silently inflated every premium/P&L figure on this tab. Removed.)
     let trades = [];
-
-    // 1. Load from published trade_history.json (historical CSV-sourced trades)
-    try {
-      const resp = await fetch(TRADE_HISTORY_URL);
-      if (resp.ok) {
-        const hist = await resp.json();
-        (hist.records || []).forEach(r => {
-          trades.push({
-            _source: 'json',
-            id: `json_${r.stock}_${r.transaction_date}`,
-            ticker: r.stock,
-            transaction_date: r.transaction_date,
-            stock_price: r.stock_price,
-            contracts: r.contracts_sold || 1,
-            strike: r.call_strike_price,
-            expiration: r.call_expiration_date,
-            dte: r.dte_days,
-            premium: r.sold_price,
-            total_premium: r.premium_dollars,
-            status: r.status || (r.is_closed ? 'closed' : 'open'),
-            close_date: r.close_date,
-            assignment_price: r.assignment_price,
-            buyback_price: r.buyback_price,
-            net_option_pnl: r.net_option_pnl,
-            underlying_pnl: r.underlying_pnl,
-            total_pnl: r.realized_total_pnl,
-            notes: r.notes,
-          });
-        });
-      }
-    } catch(e) {}
-
-    // 2. Load from Supabase (user-entered trades)
     if (db) {
       try {
         const { data, error } = await db.from('trades').select('*').order('transaction_date', { ascending: false });
@@ -1121,226 +1048,171 @@ create policy "Allow all" on public.trades for all using (true) with check (true
         }
       } catch(e) {}
     }
-
     return trades;
   }
 
-  function renderIncomeGoalTracker(trades) {
-    const GOAL = 4000;
-    const now  = new Date();
-    const thisYear  = now.getFullYear();
-    const thisMonth = now.getMonth(); // 0-based
-
-    // Helper: parse "YYYY-MM-DD" → {year, month} (0-based month)
-    function ym(dateStr) {
-      if (!dateStr) return null;
-      const d = new Date(dateStr + 'T12:00:00');
-      return isNaN(d) ? null : { year: d.getFullYear(), month: d.getMonth() };
-    }
-
-    // Accumulate per-month data
-    const monthly = {}; // key "YYYY-MM" → {prem, pnl}
+  // Shared premium-by-month rollup, keyed by the trade's open date (transaction_date).
+  // Used by both the monthly table and the pie chart below so the two numbers
+  // can never drift apart.
+  function monthlyPremiumMap(trades) {
+    const monthly = {};
     for (const t of trades) {
-      // Premium collected → when trade was opened (transaction_date)
-      const openYM = ym(t.transaction_date);
-      if (openYM && t.total_premium != null) {
-        const k = `${openYM.year}-${String(openYM.month+1).padStart(2,'0')}`;
-        monthly[k] = monthly[k] || {prem:0, pnl:0};
-        monthly[k].prem += (t.total_premium || 0);
-      }
-      // Realized P&L → when trade closed (close_date)
-      const closeYM = ym(t.close_date);
-      if (closeYM && t.total_pnl != null) {
-        const k = `${closeYM.year}-${String(closeYM.month+1).padStart(2,'0')}`;
-        monthly[k] = monthly[k] || {prem:0, pnl:0};
-        monthly[k].pnl += (t.total_pnl || 0);
-      }
+      if (t.total_premium == null || !t.transaction_date) continue;
+      const d = new Date(t.transaction_date + 'T12:00:00');
+      if (isNaN(d)) continue;
+      const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      monthly[k] = (monthly[k] || 0) + (t.total_premium || 0);
     }
+    return monthly;
+  }
 
-    // Current month key
-    const thisKey = `${thisYear}-${String(thisMonth+1).padStart(2,'0')}`;
-    const cur = monthly[thisKey] || {prem:0, pnl:0};
-    const pct = Math.min(cur.prem / GOAL * 100, 200); // cap bar at 200%
-    const remaining = Math.max(0, GOAL - cur.prem);
+  function renderIncomeGoalTracker(trades) {
+    const now = new Date();
+    const thisKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const monthly = monthlyPremiumMap(trades);
 
-    // Update stat cards
-    const setVal = (id, html, cls) => {
-      const el = document.getElementById(id); if (!el) return;
-      el.innerHTML = html;
-      el.className = 'val' + (cls ? ' ' + cls : '');
-    };
-    setVal('ig-prem', `$${cur.prem.toLocaleString(undefined,{maximumFractionDigits:0})}`,
-      cur.prem >= GOAL ? 'good' : cur.prem >= GOAL * 0.5 ? '' : '');
-    setVal('ig-pnl',  `${cur.pnl >= 0 ? '+' : ''}$${Math.abs(cur.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}`,
-      cur.pnl >= 0 ? 'good' : 'bad');
-    setVal('ig-pct',  `${pct.toFixed(0)}%`, pct >= 100 ? 'good' : '');
-    setVal('ig-remaining', remaining > 0 ? `$${remaining.toLocaleString(undefined,{maximumFractionDigits:0})}` : '✓ Goal reached!',
-      remaining === 0 ? 'good' : '');
-
-    // Progress bar
-    const bar = document.getElementById('igBar');
-    if (bar) {
-      bar.style.width = `${Math.min(pct, 100)}%`;
-      bar.className = 'progress-bar-fill' + (pct >= 100 ? ' over' : '');
-    }
-
-    // Monthly table — last 6 months sorted newest-first
-    const sortedKeys = Object.keys(monthly).sort().reverse().slice(0, 6);
+    // Newest month first
+    const sortedKeys = Object.keys(monthly).sort().reverse();
     const container = document.getElementById('incomeMonthlyTable');
     if (!container) return;
-    if (!sortedKeys.length) { container.innerHTML = ''; return; }
+    if (!sortedKeys.length) { container.innerHTML = '<p style="color:var(--muted);font-size:.9rem;">No premium collected yet.</p>'; return; }
 
     const monthLabel = key => {
       const [y, m] = key.split('-');
       return new Date(+y, +m-1, 1).toLocaleString('default', {month:'long', year:'numeric'});
     };
     container.innerHTML = `
-      <h3 style="margin-bottom:10px;color:var(--muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;">Last 6 Months</h3>
       <div class="trades-table-wrap">
         <table class="monthly-table" style="width:100%;">
           <thead><tr>
             <th>Month</th>
             <th>Premium Collected</th>
-            <th>Realized P&amp;L</th>
-            <th>vs $4k Goal</th>
           </tr></thead>
           <tbody>${sortedKeys.map(k => {
-            const d = monthly[k];
-            const goalPct = (d.prem / GOAL * 100).toFixed(0);
-            const goalCls = d.prem >= GOAL ? 'pnl-positive' : d.prem >= GOAL*0.5 ? '' : 'pnl-negative';
-            const pnlCls  = d.pnl  >= 0   ? 'pnl-positive' : 'pnl-negative';
+            const prem = monthly[k];
             const isCurrent = k === thisKey;
+            const fontStyle = isCurrent ? 'font-size:1.15rem;font-weight:700;' : '';
             return `<tr style="${isCurrent ? 'background:rgba(110,168,254,.06);' : ''}">
-              <td><strong>${monthLabel(k)}${isCurrent ? ' <span style="color:var(--accent);font-size:.75rem;">← current</span>' : ''}</strong></td>
-              <td>$${d.prem.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
-              <td><span class="${pnlCls}">${d.pnl >= 0 ? '+' : ''}$${Math.abs(d.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</span></td>
-              <td><span class="${goalCls}">${goalPct}%</span></td>
+              <td style="${fontStyle}">${monthLabel(k)}${isCurrent ? ' <span style="color:var(--accent);font-size:.72rem;font-weight:400;">← current</span>' : ''}</td>
+              <td style="${fontStyle}">$${prem.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
             </tr>`;
           }).join('')}</tbody>
         </table>
       </div>`;
   }
 
-  function renderPnLStats(trades) {
-    const closed = trades.filter(t => t.total_pnl != null);
-    const open   = trades.filter(t => !t.total_pnl && t.status === 'open');
-    const totalPnL = closed.reduce((s,t) => s + (t.total_pnl||0), 0);
-    const wins = closed.filter(t => (t.total_pnl||0) > 0).length;
-    const winRate = closed.length ? (wins/closed.length*100) : null;
-    const premiums = trades.filter(t=>t.total_premium!=null).map(t=>t.total_premium||0);
-    const avgPremium = premiums.length ? premiums.reduce((a,b)=>a+b,0)/premiums.length : null;
-
-    const setPnL = (id, val) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.classList.toggle('good', val > 0);
-      el.classList.toggle('bad',  val < 0);
-    };
-
-    const scTotal = document.getElementById('sc-total-pnl');
-    const scWin   = document.getElementById('sc-win-rate');
-    const scTrd   = document.getElementById('sc-total-trades');
-    const scPrem  = document.getElementById('sc-avg-premium');
-    const scOpen  = document.getElementById('sc-open-trades');
-
-    scTotal.innerHTML = totalPnL ? `$${totalPnL.toFixed(0)}` : '—';
-    scTotal.classList.toggle('good', totalPnL > 0);
-    scTotal.classList.toggle('bad',  totalPnL < 0);
-    scWin.textContent  = winRate != null ? `${winRate.toFixed(0)}%` : '—';
-    scTrd.textContent  = trades.length;
-    scPrem.textContent = avgPremium != null ? `$${avgPremium.toFixed(0)}` : '—';
-    scOpen.textContent = open.length;
-  }
-
-  function renderPnLChart(trades) {
-    const closed = trades
-      .filter(t => t.total_pnl != null)
-      .slice().sort((a,b) => {
-        const da = new Date(a.close_date || a.transaction_date || 0);
-        const db2 = new Date(b.close_date || b.transaction_date || 0);
-        return da - db2;
-      });
+  function renderPremiumPieChart(trades) {
+    const monthly = monthlyPremiumMap(trades);
+    const keys = Object.keys(monthly).sort(); // chronological
 
     const canvas = document.getElementById('pnlChart');
     if (!canvas) return;
 
-    if (!closed.length) {
-      canvas.parentElement.innerHTML = '<p style="color:var(--muted);padding:20px;">No closed trades with P&L data yet.</p>';
+    if (!keys.length) {
+      canvas.parentElement.innerHTML = '<p style="color:var(--muted);padding:20px;">No premium collected yet.</p>';
       return;
     }
 
-    let cum = 0;
-    const labels = [], data = [];
-    for (const t of closed) {
-      cum += (t.total_pnl || 0);
-      labels.push(t.close_date || t.transaction_date || '?');
-      data.push(+cum.toFixed(2));
-    }
+    const labels = keys.map(k => {
+      const [y, m] = k.split('-');
+      return new Date(+y, +m-1, 1).toLocaleString('default', {month:'short', year:'2-digit'});
+    });
+    const data = keys.map(k => +monthly[k].toFixed(2));
+    const palette = ['#6ea8fe','#2fbf71','#f0b429','#ff5d5d','#a78bfa','#22d3ee','#f472b6','#fb923c','#34d399','#818cf8','#facc15','#60a5fa'];
+    const colors = keys.map((_, i) => palette[i % palette.length]);
 
     if (_pnlChart) _pnlChart.destroy();
     _pnlChart = new Chart(canvas, {
-      type: 'line',
+      type: 'pie',
       data: {
         labels,
-        datasets: [{
-          label: 'Cumulative P&L ($)',
-          data,
-          borderColor: '#6ea8fe',
-          backgroundColor: 'rgba(110,168,254,0.1)',
-          fill: true, tension: 0.35, pointRadius: 4,
-          pointBackgroundColor: data.map(v => v >= 0 ? '#2fbf71' : '#ff5d5d'),
-        }]
+        datasets: [{ data, backgroundColor: colors, borderColor: '#121a33', borderWidth: 2 }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { label: ctx => ` $${ctx.parsed.y.toLocaleString()}` } }
-        },
-        scales: {
-          y: {
-            ticks: { color: '#9fb0d9', callback: v => `$${Number(v).toLocaleString()}` },
-            grid: { color: 'rgba(255,255,255,0.05)' }
-          },
-          x: { ticks: { color: '#9fb0d9', maxRotation: 45 }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          legend: { position: 'right', labels: { color: '#9fb0d9', boxWidth: 12, padding: 10 } },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: $${ctx.parsed.toLocaleString()}` } }
         }
       }
     });
   }
 
-  function renderBestTickersTable(trades) {
-    const map = {};
-    for (const t of trades) {
-      const k = (t.ticker||'').toUpperCase();
-      if (!k) continue;
-      if (!map[k]) map[k] = { ticker:k, trades:0, totalPnL:0, wins:0 };
-      map[k].trades++;
-      if (t.total_pnl != null) {
-        map[k].totalPnL += t.total_pnl;
-        if (t.total_pnl > 0) map[k].wins++;
-      }
+  let _assignChart = null;
+
+  function renderAssignmentsPanel(trades) {
+    const assigned = trades.filter(t => t.status === 'assigned');
+    const canvas  = document.getElementById('assignChart');
+    const tableEl = document.getElementById('assignTableWrap');
+
+    if (!assigned.length) {
+      if (canvas) canvas.parentElement.innerHTML = '<p style="color:var(--muted);padding:20px;">No calls have been exercised yet.</p>';
+      if (tableEl) tableEl.innerHTML = '';
+      return;
     }
-    const rows = Object.values(map).filter(r=>r.trades>0).sort((a,b)=>b.totalPnL-a.totalPnL);
-    const container = document.getElementById('bestTickersTable');
-    if (!rows.length) { container.innerHTML='<p style="color:var(--muted)">No trade data yet.</p>'; return; }
-    container.innerHTML = `
-      <table class="ticker-perf-table">
-        <thead><tr><th>Ticker</th><th>Trades</th><th>Win Rate</th><th>Total P&amp;L</th></tr></thead>
-        <tbody>${rows.map(r=>`
-          <tr>
-            <td><strong>${r.ticker}</strong></td>
-            <td>${r.trades}</td>
-            <td>${r.trades ? Math.round(r.wins/r.trades*100)+'%' : '—'}</td>
-            <td>${fmtPnL(r.totalPnL)}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table>`;
+
+    // Group shares sold by the month the assignment settled (close_date).
+    const monthly = {};
+    assigned.forEach(t => {
+      const dateStr = t.close_date || t.transaction_date;
+      if (!dateStr) return;
+      const d = new Date(dateStr + 'T12:00:00');
+      if (isNaN(d)) return;
+      const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      monthly[k] = (monthly[k] || 0) + (t.contracts || 1) * 100;
+    });
+    const keys = Object.keys(monthly).sort();
+    const labels = keys.map(k => {
+      const [y, m] = k.split('-');
+      return new Date(+y, +m-1, 1).toLocaleString('default', {month:'short', year:'2-digit'});
+    });
+    const data = keys.map(k => monthly[k]);
+
+    if (_assignChart) _assignChart.destroy();
+    if (canvas) {
+      _assignChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ label: 'Shares called away', data, backgroundColor: '#f0b429', borderRadius: 4, maxBarThickness: 46 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} shares` } }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { color: '#9fb0d9', precision: 0 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            x: { ticks: { color: '#9fb0d9' }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // Detail table, newest assignment first
+    const sorted = [...assigned].sort((a,b) =>
+      new Date(b.close_date || b.transaction_date || 0) - new Date(a.close_date || a.transaction_date || 0));
+    if (tableEl) {
+      tableEl.innerHTML = `
+        <table>
+          <thead><tr><th>Sale Date</th><th>Ticker</th><th>Strike</th><th>Shares Sold</th><th>Premium Kept</th></tr></thead>
+          <tbody>${sorted.map(t => `
+            <tr>
+              <td>${t.close_date || '—'}</td>
+              <td><strong>${(t.ticker||'').toUpperCase()}</strong></td>
+              <td>$${(t.strike||0).toFixed(2)}</td>
+              <td>${(t.contracts||1) * 100}</td>
+              <td>${t.total_premium != null ? '$'+t.total_premium.toFixed(2) : '—'}</td>
+            </tr>`).join('')}</tbody>
+        </table>`;
+    }
   }
 
   function renderTradesTable(trades) {
     const wrap = document.getElementById('tradesTableWrap');
     if (!trades.length) {
-      wrap.innerHTML = '<p style="color:var(--muted);font-size:.9rem;">No trades found. Log one with the button above.</p>';
+      wrap.innerHTML = '<p style="color:var(--muted);font-size:.9rem;">No trades found. Use Import Schwab (top right) to add your trade history.</p>';
       return;
     }
     const sorted = [...trades].sort((a,b) => new Date(b.transaction_date||0) - new Date(a.transaction_date||0));
@@ -1366,43 +1238,6 @@ create policy "Allow all" on public.trades for all using (true) with check (true
             <td>${t._source==='supabase' ? `<button onclick="editTrade(${JSON.stringify(t).replace(/"/g,'&quot;')})" style="padding:4px 8px;font-size:.78rem;">Edit</button>` : ''}</td>
           </tr>`).join('')}
         </tbody>
-      </table>`;
-  }
-
-  /* ═══════════════════════════════════════════
-     POSITION SIZING
-  ═══════════════════════════════════════════ */
-  function renderPositionSizing() {
-    const accountSize = toNum(document.getElementById('accountSize')?.value) || 50000;
-    const riskPct = (toNum(document.getElementById('riskPct')?.value) || 10) / 100;
-    const container = document.getElementById('sizingResult');
-    if (!container) return;
-
-    if (!_currentReportRows.length) {
-      container.innerHTML = '<p style="color:var(--muted)">Load a report on the Weekly Picks tab first.</p>';
-      return;
-    }
-
-    const rows = _currentReportRows.slice(0,10);
-    const maxCapital = accountSize * riskPct;
-
-    container.innerHTML = `
-      <p style="color:var(--muted);margin-bottom:10px;">Max capital per trade: <strong>$${maxCapital.toLocaleString()}</strong> (${(riskPct*100).toFixed(0)}% of $${accountSize.toLocaleString()})</p>
-      <table>
-        <thead><tr><th>Ticker</th><th>Strike</th><th>Capital/Contract</th><th>Max Contracts</th><th>Est. Premium</th></tr></thead>
-        <tbody>${rows.map(row => {
-          const cap = toNum(row['Capital Required']) || 0;
-          const maxContracts = cap > 0 ? Math.max(1, Math.floor(maxCapital / cap)) : '—';
-          const premium = toNum(row['Premium']) || 0;
-          const totalPremium = typeof maxContracts === 'number' ? premium * maxContracts : null;
-          return `<tr>
-            <td><strong>${String(row['Ticker']||'').toUpperCase()}</strong></td>
-            <td>$${fmt(row['Strike'],2)}</td>
-            <td>$${cap.toLocaleString()}</td>
-            <td>${maxContracts}</td>
-            <td>${totalPremium !== null ? '$'+totalPremium.toFixed(0) : '—'}</td>
-          </tr>`;
-        }).join('')}</tbody>
       </table>`;
   }
 
@@ -1452,16 +1287,6 @@ create policy "Allow all" on public.trades for all using (true) with check (true
   }
   document.getElementById('f_status').addEventListener('change', e => toggleCloseFields(e.target.value));
 
-  document.getElementById('openLogBtn').addEventListener('click', () => {
-    if (!supabaseConfigured) { alert('Supabase is not configured. See the P&L & Trades tab for setup instructions.'); return; }
-    if (!_session) { openLoginModal(); return; }
-    openModal();
-  });
-  document.getElementById('openLogBtn2').addEventListener('click', () => {
-    if (!supabaseConfigured) { alert('Supabase is not configured. See the setup notice above for instructions.'); return; }
-    if (!_session) { openLoginModal(); return; }
-    openModal();
-  });
   document.getElementById('cancelTradeBtn').addEventListener('click', closeModal);
   document.getElementById('tradeModal').addEventListener('click', e => { if (e.target===document.getElementById('tradeModal')) closeModal(); });
 
