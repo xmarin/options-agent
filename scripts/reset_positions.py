@@ -14,11 +14,17 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
 SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY", "")
 
 # ── Edit this to match your current Schwab positions ──────────────────────────
+# Reconciled 2026-09-11 from Xavier_Marin_-_CASH_XXX886_Transactions_20260911-142348.json
+# (03/11/2026-09/11/2026 transaction history) against the prior 2026-08-27 baseline:
+#   AMD:  20 (baseline) + 80 bought 09/10 @ 505.58 = 100 sh, blended avg cost
+#   INTC: 100 (baseline) - 100 sold outright 09/10 @ 100.984 = 0 sh -> dropped
+#   NFLX/HIMS: no transactions in the window, carried forward unchanged
+#   TSLA: new position, 93 sh bought 09/11 @ 365.34
 CORRECT_POSITIONS = [
-    {"ticker": "AMD",  "shares": 20,  "avg_cost": 475.91, "total_cost": 9518.20},
-    {"ticker": "INTC", "shares": 100, "avg_cost": 98.48,  "total_cost": 9848.00},
-    {"ticker": "NFLX", "shares": 100, "avg_cost": 94.86,  "total_cost": 9486.00},
-    {"ticker": "HIMS", "shares": 200, "avg_cost": 39.46,  "total_cost": 7892.00},
+    {"ticker": "AMD",  "shares": 100, "avg_cost": 499.646, "total_cost": 49964.60},
+    {"ticker": "NFLX", "shares": 100, "avg_cost": 94.86,   "total_cost": 9486.00},
+    {"ticker": "HIMS", "shares": 200, "avg_cost": 39.46,   "total_cost": 7892.00},
+    {"ticker": "TSLA", "shares": 93,  "avg_cost": 365.34,  "total_cost": 33976.62},
 ]
 # ─────────────────────────────────────────────────────────────────────────────
 
