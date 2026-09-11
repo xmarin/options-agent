@@ -15,6 +15,7 @@ from datetime import date
 
 ROOT = Path(__file__).parent
 OUT_PATH = ROOT / "published" / "danilo_picks_latest.json"
+MANIFEST_PATH = ROOT / "published" / "reports_manifest.json"
 
 BASE_URL = "https://raw.githubusercontent.com/dmarinb/danilo-picks/main/published"
 LATEST_URL = f"{BASE_URL}/picks_ibkr_latest.json"
@@ -85,6 +86,23 @@ def sanitize(raw: dict) -> dict:
     }
 
 
+def update_manifest(report_date: str, dated_filename: str) -> None:
+    """Add/update this report_date's entry in reports_manifest.json's danilo_reports array."""
+    if MANIFEST_PATH.exists():
+        manifest = json.loads(MANIFEST_PATH.read_text())
+    else:
+        manifest = {}
+
+    danilo_reports = manifest.get("danilo_reports", [])
+    danilo_reports = [r for r in danilo_reports if r.get("date") != report_date]
+    danilo_reports.append({"date": report_date, "file": dated_filename})
+    danilo_reports.sort(key=lambda r: r["date"], reverse=True)
+
+    manifest["danilo_reports"] = danilo_reports
+    MANIFEST_PATH.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"Updated manifest danilo_reports ({len(danilo_reports)} entries)")
+
+
 def main() -> int:
     try:
         raw     = fetch()
@@ -116,6 +134,8 @@ def main() -> int:
             json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
         )
         print(f"Saved dated copy: {dated_path}")
+
+        update_manifest(report_date, dated_name)
 
     except Exception as e:
         print(f"fetch_danilo_picks: WARNING - {e}; keeping previous file")

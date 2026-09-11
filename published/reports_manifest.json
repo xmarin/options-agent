@@ -162,5 +162,11 @@
       "report": "covered_call_report_2026-03-23.csv",
       "summary": null
     }
+  ],
+  "danilo_reports": [
+    {
+      "date": "2026-07-20",
+      "file": "danilo_picks_07-20-2026.json"
+    }
   ]
 }
