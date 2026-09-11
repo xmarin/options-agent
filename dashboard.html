@@ -694,10 +694,12 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     const posContent   = document.getElementById('posContent');
     const danWall      = document.getElementById('daniloAuthWall');
     const danContent   = document.getElementById('daniloContent');
+    const importBtn = document.getElementById('importSchwabBtn');
     if (_session) {
       btn.textContent = '✓ Sign Out';
       btn.classList.add('signed-in');
       logBtns.forEach(b => { if (b) b.style.display = 'inline-block'; });
+      if (importBtn)    importBtn.style.display    = 'inline-block';
       if (picksWall)    picksWall.style.display    = 'none';
       if (picksContent) picksContent.style.display = 'block';
       if (posWall)      posWall.style.display      = 'none';
@@ -709,6 +711,7 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       btn.textContent = 'Sign In';
       btn.classList.remove('signed-in');
       logBtns.forEach(b => { if (b) b.style.display = 'none'; });
+      if (importBtn)    importBtn.style.display    = 'none';
       if (picksWall)    picksWall.style.display    = 'block';
       if (picksContent) picksContent.style.display = 'none';
       if (posWall)      posWall.style.display      = 'block';
