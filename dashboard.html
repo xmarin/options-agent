@@ -923,9 +923,10 @@ create policy "Allow all" on public.trades for all using (true) with check (true
 
     const trades = await loadAllTrades();
     const positionsMap = await loadPositionsMap();
+    const stockLedger = await loadStockLedger();
     renderIncomeGoalTracker(trades);
     renderCallsSoldChart(trades);
-    renderTradesTable(trades, positionsMap);
+    renderTradesTable(trades, stockLedger, positionsMap);
   }
 
   async function loadAllTrades() {
@@ -957,6 +958,51 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       } catch(e) {}
     }
     return map;
+  }
+
+  // Ticker -> chronological list of stock_transactions rows. This is the
+  // full buy/sell ledger (no 90-day cutoff), used to replay the actual cost
+  // basis at a point in time -- unlike `positions.avg_cost`, which is only
+  // today's snapshot and drifts once more shares get bought later.
+  async function loadStockLedger() {
+    const map = {};
+    if (db) {
+      try {
+        const { data, error } = await db.from('stock_transactions')
+          .select('*').order('transaction_date', { ascending: true });
+        if (!error && data) {
+          data.forEach(r => {
+            const k = (r.ticker||'').toUpperCase();
+            (map[k] = map[k] || []).push(r);
+          });
+        }
+      } catch(e) {}
+    }
+    return map;
+  }
+
+  // Weighted-average cost per share for a ticker as of (and including) a
+  // given date, replaying its ledger in order. Same-day sell rows are
+  // excluded from the replay -- in this account's history a same-day sell
+  // is always the assignment we're solving the pre-sale cost basis for, so
+  // including it would net it against itself.
+  function costBasisAsOf(ledgerRows, dateStr) {
+    if (!ledgerRows || !ledgerRows.length || !dateStr) return null;
+    let shares = 0, cost = 0;
+    for (const r of ledgerRows) {
+      if (r.transaction_date > dateStr) break;
+      if (r.transaction_date === dateStr && r.action === 'sell') continue;
+      if (r.action === 'buy') {
+        cost   += r.shares * (r.price || 0);
+        shares += r.shares;
+      } else if (r.action === 'sell' && shares > 0) {
+        const avg  = cost / shares;
+        const sold = Math.min(r.shares, shares);
+        cost   -= avg * sold;
+        shares -= sold;
+      }
+    }
+    return shares > 0 ? cost / shares : null;
   }
 
   // A trade's date falls into one of 4 week-buckets within its month: days
@@ -1095,7 +1141,7 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     });
   }
 
-  function renderTradesTable(trades, positionsMap = {}) {
+  function renderTradesTable(trades, stockLedger = {}, positionsMap = {}) {
     const wrap = document.getElementById('tradesTableWrap');
     if (!trades.length) {
       wrap.innerHTML = '<p style="color:var(--muted);font-size:.9rem;">No trades found. Use Import Schwab (top right) to add your trade history.</p>';
@@ -1111,16 +1157,24 @@ create policy "Allow all" on public.trades for all using (true) with check (true
         </tr></thead>
         <tbody>
           ${sorted.map(t => {
-            // Cost/P&L only apply to exercised (assigned) calls, sourced from
-            // the ticker's current My Positions entry -- so a ticker that has
-            // since been fully sold out of My Positions won't have a cost basis
-            // to show here.
+            // Cost/P&L only apply to exercised (assigned) calls: the cost
+            // basis of the 100 shares at the moment they were called away,
+            // replayed from the stock_transactions ledger. Falls back to
+            // today's My Positions avg_cost if the ledger has nothing for
+            // this ticker yet (e.g. before the one-time backfill has run) --
+            // less accurate, since that drifts as more shares get bought,
+            // but better than a blank cell.
             let costCell = '—', pnlCell = '—';
             if (t.status === 'assigned') {
               const shares = (t.contracts || 1) * 100;
-              const pos = positionsMap[(t.ticker||'').toUpperCase()];
-              if (pos && pos.avg_cost != null) {
-                const cost = pos.avg_cost * shares;
+              const ticker = (t.ticker||'').toUpperCase();
+              let avgCost = costBasisAsOf(stockLedger[ticker], t.close_date || t.transaction_date);
+              if (avgCost == null) {
+                const pos = positionsMap[ticker];
+                avgCost = (pos && pos.avg_cost != null) ? pos.avg_cost : null;
+              }
+              if (avgCost != null) {
+                const cost = avgCost * shares;
                 const saleValue = (t.strike || 0) * shares;
                 const stockPnl = saleValue - cost;
                 const pnlCls = stockPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
@@ -1480,13 +1534,37 @@ create policy "Allow all" on public.trades for all using (true) with check (true
         }))
         .filter(s => s.shares !== 0);
 
-    return { trades, stockChanges };
+      // ── Full stock buy/sell ledger (no cutoff) ──────────────────────────────
+      // Feeds the stock_transactions table so Cost/P&L on an exercised call
+      // can be computed from the cost basis at that moment, not today's
+      // blended average. Every row in the export is included here (upserted,
+      // so re-importing an overlapping file never duplicates).
+      const stockTxns = [];
+      txns.forEach(t => {
+        if (!['Buy', 'Sell'].includes(t.Action)) return;
+        const sym = (t.Symbol || '').trim().toUpperCase();
+        if (!/^[A-Z]{1,6}$/.test(sym)) return;
+        const qty   = Math.abs(parseFloat(String(t.Quantity || '0').replace(/,/g, '')));
+        const price = parseFloat(String(t.Price   || '0').replace(/[$,]/g, '')) || null;
+        const amount = parseFloat(String(t.Amount || '0').replace(/[$,]/g, '')) || null;
+        if (!qty || isNaN(qty)) return;
+        stockTxns.push({
+          ticker:           sym,
+          transaction_date: parseSchwabDate((t.Date || '').trim()),
+          action:           t.Action.toLowerCase(),
+          shares:           qty,
+          price,
+          amount,
+        });
+      });
+
+    return { trades, stockChanges, stockTxns };
   }
 
-  let _importParsed = { trades: [], stockChanges: [] };
+  let _importParsed = { trades: [], stockChanges: [], stockTxns: [] };
 
-  function showImportPreview({ trades, stockChanges }) {
-    _importParsed = { trades, stockChanges };
+  function showImportPreview({ trades, stockChanges, stockTxns }) {
+    _importParsed = { trades, stockChanges, stockTxns };
     const statusBadge = s =>
       s === 'expired'  ? '<span class="status-badge status-expired">Expired</span>'  :
       s === 'assigned' ? '<span class="status-badge status-assigned">Assigned</span>' :
@@ -1545,7 +1623,7 @@ create policy "Allow all" on public.trades for all using (true) with check (true
 
   function closeImportModal() {
     document.getElementById('importModal').classList.remove('open');
-    _importParsed = { trades: [], stockChanges: [] };
+    _importParsed = { trades: [], stockChanges: [], stockTxns: [] };
   }
 
   document.getElementById('importModal')?.addEventListener('click', e => {
@@ -1553,7 +1631,7 @@ create policy "Allow all" on public.trades for all using (true) with check (true
   });
 
   document.getElementById('confirmImportBtn')?.addEventListener('click', async () => {
-    const { trades: importTrades, stockChanges } = _importParsed;
+    const { trades: importTrades, stockChanges, stockTxns } = _importParsed;
     if (!importTrades.length && !stockChanges.length || !db) return;
     const btn = document.getElementById('confirmImportBtn');
     btn.disabled = true;
@@ -1620,6 +1698,14 @@ create policy "Allow all" on public.trades for all using (true) with check (true
         }
       }
 
+      // ── 3. Append to the stock buy/sell ledger (for exercised-call cost basis) ──
+      let ledgerUpserted = 0;
+      if (stockTxns && stockTxns.length) {
+        const { error, count } = await db.from('stock_transactions')
+          .upsert(stockTxns, { onConflict: 'ticker,transaction_date,action,shares,price', count: 'exact' });
+        if (!error) ledgerUpserted = count ?? stockTxns.length;
+      }
+
       closeImportModal();
       const tradeSummary = importTrades.length
         ? `${inserted} trade(s) added, ${updated} updated${errors ? ', ' + errors + ' errors' : ''}`
@@ -1627,7 +1713,10 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       const posSummary = stockChanges.length
         ? ` | Positions: ${posAdded} added, ${posUpdated} updated, ${posRemoved} removed`
         : '';
-      alert(`Import complete: ${tradeSummary}${posSummary}.`);
+      const ledgerSummary = stockTxns && stockTxns.length
+        ? ` | Stock ledger: ${ledgerUpserted} row(s) synced`
+        : '';
+      alert(`Import complete: ${tradeSummary}${posSummary}${ledgerSummary}.`);
       _pnlInitialized = false;
       _positionsInitialized = false;
       initPnLTab();
