@@ -285,23 +285,16 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     <div class="panel" id="incomeGoalPanel">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
         <h2>Calls Sold</h2>
-        <span style="color:var(--muted);font-size:.85rem;">Target: <strong style="color:var(--text);">$4,000 / month</strong></span>
+        <span style="color:var(--muted);font-size:.85rem;">YTD: <strong id="ig-ytd" style="color:var(--text);">—</strong></span>
       </div>
       <div id="incomeMonthlyTable"></div>
     </div>
 
-    <!-- ── Calls Exercised ── -->
+    <!-- Calls Sold (chart) -->
     <div class="panel">
-      <h2 style="margin-bottom:14px;">Calls Exercised</h2>
-      <div id="exercisedMonthlyTable"></div>
-    </div>
-
-    <!-- Calls Sold and Exercised (chart) -->
-    <div class="panel">
-      <h2>Calls Sold and Exercised</h2>
-      <p style="color:var(--muted);font-size:.88rem;margin-bottom:14px;">Shares represented by calls sold vs. calls exercised (assigned), by week.</p>
+      <h2>Calls Sold</h2>
+      <p style="color:var(--muted);font-size:.88rem;margin-bottom:14px;">Premium collected per week.</p>
       <div class="chart-wrap"><canvas id="assignChart"></canvas></div>
-      <div class="trades-table-wrap" id="assignTableWrap" style="margin-top:16px;"></div>
     </div>
 
     <!-- Trade History Table -->
@@ -453,95 +446,6 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     </div>
     <div id="loginError" style="color:var(--bad);font-size:.85rem;margin-bottom:12px;display:none;"></div>
     <button id="loginSubmitBtn" class="btn-save log-btn" style="width:100%;border-radius:12px;">Sign In</button>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════
-     Trade Log Modal
-══════════════════════════════════════ -->
-<div id="tradeModal" class="modal-overlay">
-  <div class="modal-box">
-    <h2 id="modalTitle">Log New Trade</h2>
-    <form id="tradeForm" autocomplete="off">
-      <input type="hidden" id="f_id">
-      <div class="form-row">
-        <div class="form-group">
-          <label>Ticker *</label>
-          <input type="text" id="f_ticker" required placeholder="AAPL" style="text-transform:uppercase;">
-        </div>
-        <div class="form-group">
-          <label>Transaction Date *</label>
-          <input type="date" id="f_transaction_date" required>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Stock Price at Entry</label>
-          <input type="number" id="f_stock_price" step="0.01" placeholder="150.00">
-        </div>
-        <div class="form-group">
-          <label>Contracts Sold</label>
-          <input type="number" id="f_contracts" value="1" min="1">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Strike Price *</label>
-          <input type="number" id="f_strike" step="0.01" required placeholder="155.00">
-        </div>
-        <div class="form-group">
-          <label>Expiration Date *</label>
-          <input type="date" id="f_expiration" required>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Premium per Contract ($)</label>
-          <input type="number" id="f_premium" step="0.01" placeholder="1.50">
-        </div>
-        <div class="form-group">
-          <label>Status</label>
-          <select id="f_status">
-            <option value="open">Open</option>
-            <option value="expired_worthless">Expired Worthless</option>
-            <option value="assigned">Assigned</option>
-            <option value="rolled">Rolled</option>
-            <option value="bought_back">Bought Back</option>
-          </select>
-        </div>
-      </div>
-      <div id="closeFields" class="close-fields" style="display:none;">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Close Date</label>
-            <input type="date" id="f_close_date">
-          </div>
-          <div class="form-group">
-            <label>Buyback Price (if closed early)</label>
-            <input type="number" id="f_buyback_price" step="0.01" placeholder="0.50">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Assignment Price (if assigned)</label>
-            <input type="number" id="f_assignment_price" step="0.01">
-          </div>
-          <div class="form-group">
-            <label>Total Realized P&amp;L ($)</label>
-            <input type="number" id="f_total_pnl" step="0.01" placeholder="Auto-calculated if left blank">
-          </div>
-        </div>
-      </div>
-      <div class="form-group" style="margin-top:10px;">
-        <label>Notes</label>
-        <textarea id="f_notes" rows="2" placeholder="Any notes…"></textarea>
-      </div>
-      <div id="formError" style="color:var(--bad);font-size:.85rem;margin-top:8px;display:none;"></div>
-      <div class="form-actions">
-        <button type="button" class="btn-cancel" id="cancelTradeBtn">Cancel</button>
-        <button type="submit" class="btn-save">Save Trade</button>
-      </div>
-    </form>
   </div>
 </div>
 
@@ -1018,10 +922,10 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     }
 
     const trades = await loadAllTrades();
+    const positionsMap = await loadPositionsMap();
     renderIncomeGoalTracker(trades);
-    renderExercisedTable(trades);
-    renderAssignmentsPanel(trades);
-    renderTradesTable(trades);
+    renderCallsSoldChart(trades);
+    renderTradesTable(trades, positionsMap);
   }
 
   async function loadAllTrades() {
@@ -1042,6 +946,19 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     return trades;
   }
 
+  // Ticker -> current position (shares, avg_cost, total_cost), used to work
+  // out stock cost/P&L for calls that were exercised.
+  async function loadPositionsMap() {
+    const map = {};
+    if (db) {
+      try {
+        const { data, error } = await db.from('positions').select('*');
+        if (!error && data) data.forEach(p => { map[(p.ticker||'').toUpperCase()] = p; });
+      } catch(e) {}
+    }
+    return map;
+  }
+
   // A trade's date falls into one of 4 week-buckets within its month: days
   // 1-7, 8-14, 15-21, 22-end (the last bucket absorbs any extra days so every
   // month always has exactly 4 weeks).
@@ -1056,16 +973,12 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     };
   }
 
-  // Shared week-by-month premium rollup. `dateField` picks which date drives
-  // the bucketing (open date for calls sold, close date for calls exercised);
-  // `filterFn` narrows which trades count. Used by both the Calls Sold and
-  // Calls Exercised tables so their numbers can never drift apart.
-  function weeklyPremiumMap(trades, { dateField, filterFn } = {}) {
+  // Week-by-month premium rollup, keyed by the trade's open date (transaction_date).
+  function weeklyPremiumMap(trades) {
     const monthly = {}; // monthKey -> {w1,w2,w3,w4,total}
     for (const t of trades) {
-      if (filterFn && !filterFn(t)) continue;
       if (t.total_premium == null) continue;
-      const wk = weekOfMonth(t[dateField]);
+      const wk = weekOfMonth(t.transaction_date);
       if (!wk) continue;
       if (!monthly[wk.monthKey]) monthly[wk.monthKey] = { w1:0, w2:0, w3:0, w4:0, total:0 };
       monthly[wk.monthKey][`w${wk.week}`] += t.total_premium;
@@ -1074,9 +987,11 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     return monthly;
   }
 
-  function renderWeeklyPremiumTable(containerId, monthly) {
+  function renderIncomeGoalTracker(trades) {
+    const GOAL = 4000;
     const now = new Date();
     const thisKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const monthly = weeklyPremiumMap(trades);
 
     // Always show the current month, even with nothing collected yet, so it
     // reads as $0 instead of just being absent. Once the calendar rolls to
@@ -1084,8 +999,17 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     const data = { ...monthly };
     if (!data[thisKey]) data[thisKey] = { w1:0, w2:0, w3:0, w4:0, total:0 };
 
+    // Year-to-date total, shown in the panel header
+    const ytdEl = document.getElementById('ig-ytd');
+    if (ytdEl) {
+      const ytd = Object.entries(data)
+        .filter(([k]) => k.startsWith(String(now.getFullYear())))
+        .reduce((s, [,d]) => s + d.total, 0);
+      ytdEl.textContent = `$${ytd.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+    }
+
     const sortedKeys = Object.keys(data).sort().reverse(); // newest month first
-    const container = document.getElementById(containerId);
+    const container = document.getElementById('incomeMonthlyTable');
     if (!container) return;
 
     const monthLabel = key => {
@@ -1098,123 +1022,80 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       <div class="trades-table-wrap">
         <table class="monthly-table" style="width:100%;">
           <thead><tr>
-            <th>Month</th><th>Week 1</th><th>Week 2</th><th>Week 3</th><th>Week 4</th><th>Premium Collected</th>
+            <th>Month</th><th>Week 1</th><th>Week 2</th><th>Week 3</th><th>Week 4</th>
+            <th style="text-align:center;">Premium<br>Collected</th>
+            <th>Actual vs Goal</th>
           </tr></thead>
           <tbody>${sortedKeys.map(k => {
             const d = data[k];
             const isCurrent = k === thisKey;
             const fontStyle = isCurrent ? 'font-size:1.15rem;font-weight:700;' : '';
+            const vsGoal = d.total - GOAL;
+            const vsGoalCls = vsGoal >= 0 ? 'pnl-positive' : 'pnl-negative';
             return `<tr style="${isCurrent ? 'background:rgba(110,168,254,.06);' : ''}">
               <td style="${fontStyle}">${monthLabel(k)}${isCurrent ? ' <span style="color:var(--accent);font-size:.72rem;font-weight:400;">← current</span>' : ''}</td>
               <td>${money(d.w1)}</td>
               <td>${money(d.w2)}</td>
               <td>${money(d.w3)}</td>
               <td>${money(d.w4)}</td>
-              <td style="${fontStyle}">${money(d.total)}</td>
+              <td style="${fontStyle}text-align:center;">${money(d.total)}</td>
+              <td><span class="${vsGoalCls}">${vsGoal >= 0 ? '+' : '-'}$${Math.abs(vsGoal).toLocaleString(undefined,{maximumFractionDigits:0})}</span></td>
             </tr>`;
           }).join('')}</tbody>
         </table>
       </div>`;
   }
 
-  function renderIncomeGoalTracker(trades) {
-    const monthly = weeklyPremiumMap(trades, { dateField: 'transaction_date' });
-    renderWeeklyPremiumTable('incomeMonthlyTable', monthly);
-  }
-
-  function renderExercisedTable(trades) {
-    const monthly = weeklyPremiumMap(trades, { dateField: 'close_date', filterFn: t => t.status === 'assigned' });
-    renderWeeklyPremiumTable('exercisedMonthlyTable', monthly);
-  }
-
-  // Weekly share-count rollup for the bar chart below: "YYYY-MM-W#" -> shares.
-  function weeklyShareMap(trades, { dateField, filterFn } = {}) {
-    const map = {};
-    for (const t of trades) {
-      if (filterFn && !filterFn(t)) continue;
-      const wk = weekOfMonth(t[dateField]);
-      if (!wk) continue;
-      const key = `${wk.monthKey}-W${wk.week}`;
-      map[key] = (map[key] || 0) + (t.contracts || 1) * 100;
-    }
-    return map;
-  }
-
   let _assignChart = null;
 
-  function renderAssignmentsPanel(trades) {
-    const canvas  = document.getElementById('assignChart');
-    const tableEl = document.getElementById('assignTableWrap');
-    const assigned = trades.filter(t => t.status === 'assigned');
+  function renderCallsSoldChart(trades) {
+    const canvas = document.getElementById('assignChart');
+    if (!canvas) return;
 
-    // Sold: every call opened, bucketed by the week it was sold (transaction_date).
-    // Exercised: only assigned calls, bucketed by the week the assignment settled (close_date).
-    const soldMap = weeklyShareMap(trades, { dateField: 'transaction_date' });
-    const exercisedMap = weeklyShareMap(assigned, { dateField: 'close_date' });
-    const allKeys = Array.from(new Set([...Object.keys(soldMap), ...Object.keys(exercisedMap)])).sort();
+    // Weekly premium buckets: "YYYY-MM-W#" -> $ collected
+    const weekly = {};
+    for (const t of trades) {
+      if (t.total_premium == null) continue;
+      const wk = weekOfMonth(t.transaction_date);
+      if (!wk) continue;
+      const key = `${wk.monthKey}-W${wk.week}`;
+      weekly[key] = (weekly[key] || 0) + t.total_premium;
+    }
+    const keys = Object.keys(weekly).sort();
 
-    if (!allKeys.length) {
-      if (canvas) canvas.parentElement.innerHTML = '<p style="color:var(--muted);padding:20px;">No calls sold or exercised yet.</p>';
-      if (tableEl) tableEl.innerHTML = '';
+    if (!keys.length) {
+      canvas.parentElement.innerHTML = '<p style="color:var(--muted);padding:20px;">No calls sold yet.</p>';
       return;
     }
 
-    const labels = allKeys.map(key => {
+    const labels = keys.map(key => {
       const [y, m, w] = key.split('-');
       return `${new Date(+y, +m-1, 1).toLocaleString('default', {month:'short'})} ${w}`;
     });
-    const soldData = allKeys.map(k => soldMap[k] || 0);
-    const exercisedData = allKeys.map(k => exercisedMap[k] || 0);
+    const data = keys.map(k => +weekly[k].toFixed(2));
 
     if (_assignChart) _assignChart.destroy();
-    if (canvas) {
-      _assignChart = new Chart(canvas, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            { label: 'Calls Sold',      data: soldData,      backgroundColor: '#6ea8fe', borderRadius: 4, maxBarThickness: 28 },
-            { label: 'Calls Exercised', data: exercisedData, backgroundColor: '#f0b429', borderRadius: 4, maxBarThickness: 28 },
-          ]
+    _assignChart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{ label: 'Premium Collected', data, backgroundColor: '#6ea8fe', borderRadius: 4, maxBarThickness: 28 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` $${ctx.parsed.y.toLocaleString()}` } }
         },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: {
-            legend: { labels: { color: '#9fb0d9' } },
-            tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} shares` } }
-          },
-          scales: {
-            y: { beginAtZero: true, ticks: { color: '#9fb0d9', precision: 0 }, grid: { color: 'rgba(255,255,255,0.05)' } },
-            x: { ticks: { color: '#9fb0d9', maxRotation: 60, minRotation: 45 }, grid: { display: false } }
-          }
+        scales: {
+          y: { beginAtZero: true, ticks: { color: '#9fb0d9', callback: v => `$${Number(v).toLocaleString()}` }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          x: { ticks: { color: '#9fb0d9', maxRotation: 60, minRotation: 45 }, grid: { display: false } }
         }
-      });
-    }
-
-    // Detail table, newest assignment first
-    const sorted = [...assigned].sort((a,b) =>
-      new Date(b.close_date || b.transaction_date || 0) - new Date(a.close_date || a.transaction_date || 0));
-    if (tableEl) {
-      if (!sorted.length) {
-        tableEl.innerHTML = '<p style="color:var(--muted);font-size:.9rem;">No calls have been exercised yet.</p>';
-      } else {
-        tableEl.innerHTML = `
-          <table>
-            <thead><tr><th>Sale Date</th><th>Ticker</th><th>Strike</th><th>Shares Sold</th><th>Premium Kept</th></tr></thead>
-            <tbody>${sorted.map(t => `
-              <tr>
-                <td>${t.close_date || '—'}</td>
-                <td><strong>${(t.ticker||'').toUpperCase()}</strong></td>
-                <td>$${(t.strike||0).toFixed(2)}</td>
-                <td>${(t.contracts||1) * 100}</td>
-                <td>${t.total_premium != null ? '$'+t.total_premium.toFixed(2) : '—'}</td>
-              </tr>`).join('')}</tbody>
-          </table>`;
       }
-    }
+    });
   }
 
-  function renderTradesTable(trades) {
+  function renderTradesTable(trades, positionsMap = {}) {
     const wrap = document.getElementById('tradesTableWrap');
     if (!trades.length) {
       wrap.innerHTML = '<p style="color:var(--muted);font-size:.9rem;">No trades found. Use Import Schwab (top right) to add your trade history.</p>';
@@ -1225,11 +1106,29 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       <table>
         <thead><tr>
           <th>Date</th><th>Ticker</th><th>Strike</th><th>Exp</th>
-          <th>Premium</th><th>Contracts</th><th>Status</th><th>P&amp;L</th><th>Notes</th>
-          <th></th>
+          <th>Premium</th><th>Contracts</th><th>Status</th>
+          <th>Premium Collected (-fees)</th><th>Cost</th><th>P&amp;L</th>
         </tr></thead>
         <tbody>
-          ${sorted.map(t => `
+          ${sorted.map(t => {
+            // Cost/P&L only apply to exercised (assigned) calls, sourced from
+            // the ticker's current My Positions entry -- so a ticker that has
+            // since been fully sold out of My Positions won't have a cost basis
+            // to show here.
+            let costCell = '—', pnlCell = '—';
+            if (t.status === 'assigned') {
+              const shares = (t.contracts || 1) * 100;
+              const pos = positionsMap[(t.ticker||'').toUpperCase()];
+              if (pos && pos.avg_cost != null) {
+                const cost = pos.avg_cost * shares;
+                const saleValue = (t.strike || 0) * shares;
+                const stockPnl = saleValue - cost;
+                const pnlCls = stockPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+                costCell = `$${cost.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+                pnlCell = `<span class="${pnlCls}">${stockPnl >= 0 ? '+' : '-'}$${Math.abs(stockPnl).toLocaleString(undefined,{maximumFractionDigits:0})}</span>`;
+              }
+            }
+            return `
           <tr>
             <td>${t.transaction_date||'—'}</td>
             <td><strong>${(t.ticker||'').toUpperCase()}</strong></td>
@@ -1239,135 +1138,13 @@ create policy "Allow all" on public.trades for all using (true) with check (true
             <td>${t.contracts||1}</td>
             <td><span class="status-badge status-${t.status||'open'}">${(t.status||'open').replace('_',' ')}</span></td>
             <td>${t.total_pnl != null ? fmtPnL(t.total_pnl) : '—'}</td>
-            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;">${t.notes||''}</td>
-            <td>${t._source==='supabase' ? `<button onclick="editTrade(${JSON.stringify(t).replace(/"/g,'&quot;')})" style="padding:4px 8px;font-size:.78rem;">Edit</button>` : ''}</td>
-          </tr>`).join('')}
+            <td>${costCell}</td>
+            <td>${pnlCell}</td>
+          </tr>`;
+          }).join('')}
         </tbody>
       </table>`;
   }
-
-  /* ═══════════════════════════════════════════
-     TRADE LOG MODAL
-  ═══════════════════════════════════════════ */
-  function openModal(prefill = null) {
-    const modal = document.getElementById('tradeModal');
-    const form  = document.getElementById('tradeForm');
-    form.reset();
-    document.getElementById('f_id').value = '';
-    document.getElementById('modalTitle').textContent = prefill ? 'Edit Trade' : 'Log New Trade';
-    document.getElementById('closeFields').style.display = 'none';
-    document.getElementById('formError').style.display = 'none';
-
-    if (prefill) {
-      document.getElementById('f_id').value              = prefill.id || '';
-      document.getElementById('f_ticker').value          = (prefill.ticker||'').toUpperCase();
-      document.getElementById('f_transaction_date').value = prefill.transaction_date || '';
-      document.getElementById('f_stock_price').value     = prefill.stock_price || '';
-      document.getElementById('f_contracts').value       = prefill.contracts || 1;
-      document.getElementById('f_strike').value          = prefill.strike || '';
-      document.getElementById('f_expiration').value      = prefill.expiration || '';
-      document.getElementById('f_premium').value         = prefill.premium || '';
-      document.getElementById('f_status').value          = prefill.status || 'open';
-      document.getElementById('f_notes').value           = prefill.notes || '';
-      toggleCloseFields(prefill.status);
-      if (prefill.status !== 'open') {
-        document.getElementById('f_close_date').value      = prefill.close_date || '';
-        document.getElementById('f_buyback_price').value   = prefill.buyback_price || '';
-        document.getElementById('f_assignment_price').value = prefill.assignment_price || '';
-        document.getElementById('f_total_pnl').value       = prefill.total_pnl || '';
-      }
-    }
-
-    // Default today's date for new trades
-    if (!prefill) {
-      document.getElementById('f_transaction_date').value = new Date().toISOString().slice(0,10);
-    }
-
-    modal.classList.add('open');
-  }
-  function closeModal() { document.getElementById('tradeModal').classList.remove('open'); }
-
-  function toggleCloseFields(status) {
-    document.getElementById('closeFields').style.display = (status && status !== 'open') ? 'block' : 'none';
-  }
-  document.getElementById('f_status').addEventListener('change', e => toggleCloseFields(e.target.value));
-
-  document.getElementById('cancelTradeBtn').addEventListener('click', closeModal);
-  document.getElementById('tradeModal').addEventListener('click', e => { if (e.target===document.getElementById('tradeModal')) closeModal(); });
-
-  function editTrade(tradeObj) { openModal(tradeObj); }
-
-  document.getElementById('tradeForm').addEventListener('submit', async e => {
-    e.preventDefault();
-    if (!db) { alert('Supabase not configured.'); return; }
-
-    const errEl = document.getElementById('formError');
-    errEl.style.display = 'none';
-
-    const status  = document.getElementById('f_status').value;
-    const premium = toNum(document.getElementById('f_premium').value);
-    const contracts = parseInt(document.getElementById('f_contracts').value) || 1;
-
-    // Auto-calculate total_pnl if not provided
-    let totalPnL = toNum(document.getElementById('f_total_pnl').value);
-    if (totalPnL === null && status !== 'open') {
-      const buyback = toNum(document.getElementById('f_buyback_price').value) || 0;
-      if (premium != null) {
-        // expired worthless: keep full premium; bought back: premium minus buyback
-        if (status === 'expired_worthless') totalPnL = premium * contracts * 100;
-        else if (status === 'bought_back') totalPnL = (premium - buyback) * contracts * 100;
-      }
-    }
-
-    // Calculate DTE
-    const transDate = document.getElementById('f_transaction_date').value;
-    const expDate   = document.getElementById('f_expiration').value;
-    let dte = null;
-    if (transDate && expDate) {
-      dte = Math.round((new Date(expDate) - new Date(transDate)) / (1000*60*60*24));
-    }
-
-    // Calculate pct_otm
-    const stockPrice = toNum(document.getElementById('f_stock_price').value);
-    const strike     = toNum(document.getElementById('f_strike').value);
-    const pctOtm = (stockPrice && strike) ? ((strike - stockPrice) / stockPrice) : null;
-
-    const payload = {
-      ticker:           (document.getElementById('f_ticker').value||'').toUpperCase().trim(),
-      transaction_date: transDate,
-      stock_price:      stockPrice,
-      contracts,
-      strike,
-      expiration:       expDate,
-      dte,
-      premium,
-      total_premium:    premium != null ? +(premium * contracts * 100).toFixed(2) : null,
-      pct_otm:          pctOtm != null ? +pctOtm.toFixed(4) : null,
-      notes:            document.getElementById('f_notes').value || null,
-      status,
-      close_date:       document.getElementById('f_close_date').value || null,
-      assignment_price: toNum(document.getElementById('f_assignment_price').value),
-      buyback_price:    toNum(document.getElementById('f_buyback_price').value),
-      total_pnl:        totalPnL,
-    };
-
-    const existingId = document.getElementById('f_id').value;
-    let error;
-    if (existingId) {
-      ({ error } = await db.from('trades').update(payload).eq('id', existingId));
-    } else {
-      ({ error } = await db.from('trades').insert([payload]));
-    }
-
-    if (error) {
-      errEl.textContent = 'Error saving: ' + error.message;
-      errEl.style.display = 'block';
-    } else {
-      closeModal();
-      _pnlInitialized = false;
-      initPnLTab();
-    }
-  });
 
   /* ═══════════════════════════════════════════
      MY POSITIONS TAB
@@ -1428,15 +1205,20 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     const priceMap = await fetchLivePrices(tickers);
     document.getElementById('posLastRefresh').textContent = `Updated ${new Date().toLocaleTimeString()}`;
 
-    // 3. Render positions table
-    renderPositionsTable(positions);
+    // 3. Total premium ever collected per ticker (all calls sold against it, any status)
+    const allTrades = await loadAllTrades();
+    const premiumByTicker = {};
+    allTrades.forEach(t => {
+      if (t.total_premium == null) return;
+      const k = (t.ticker||'').toUpperCase();
+      premiumByTicker[k] = (premiumByTicker[k] || 0) + t.total_premium;
+    });
 
-    // 4. Load and render open calls
-    let openCalls = [];
-    try {
-      const { data, error } = await db.from('trades').select('*').eq('status', 'open').order('expiration');
-      if (!error && data) openCalls = data;
-    } catch(e) {}
+    // 4. Render positions table
+    renderPositionsTable(positions, premiumByTicker);
+
+    // 5. Load and render open calls
+    let openCalls = allTrades.filter(t => t.status === 'open').sort((a,b) => new Date(a.expiration||0) - new Date(b.expiration||0));
 
     if (openCalls.length) {
       openCallsPanel.style.display = 'block';
@@ -1446,25 +1228,27 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     _positionsInitialized = true;
   }
 
-  function renderPositionsTable(positions) {
+  function renderPositionsTable(positions, premiumByTicker = {}) {
     const rows = positions.map(p => {
       const contracts = Math.floor(p.shares / 100);
       const contractBadge = contracts >= 1
         ? `<span style="color:var(--accent);font-weight:600;">${contracts}</span>`
         : `<span style="color:var(--muted)">—</span>`;
+      const premium = premiumByTicker[(p.ticker||'').toUpperCase()] || 0;
 
       return `<tr>
         <td><strong>${p.ticker}</strong></td>
         <td>${p.shares.toLocaleString()}</td>
         <td>$${(p.total_cost||0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}</td>
         <td>${contractBadge}</td>
+        <td>$${premium.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}</td>
       </tr>`;
     }).join('');
 
     document.getElementById('positionsTableWrap').innerHTML = `
       <table>
         <thead><tr>
-          <th>Ticker</th><th>Shares</th><th>Cost Basis</th><th>Contracts</th>
+          <th>Ticker</th><th>Shares</th><th>Cost Basis</th><th>Contracts</th><th>Premium Collected</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>`;
