@@ -1148,23 +1148,29 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       return;
     }
     const sorted = [...trades].sort((a,b) => new Date(b.transaction_date||0) - new Date(a.transaction_date||0));
+    const centeredWrap = 'text-align:center;white-space:normal;';
     wrap.innerHTML = `
       <table>
         <thead><tr>
           <th>Date</th><th>Ticker</th><th>Strike</th><th>Exp</th>
           <th>Premium</th><th>Contracts</th><th>Status</th>
-          <th>Premium Collected (-fees)</th><th>Cost</th><th>P&amp;L</th>
+          <th style="${centeredWrap}">Premium<br>Collected<br>(-fees)</th>
+          <th style="${centeredWrap}">Stock Price<br>Bought</th>
+          <th style="${centeredWrap}">Stock Price<br>Sold</th>
+          <th>P&amp;L</th>
         </tr></thead>
         <tbody>
           ${sorted.map(t => {
-            // Cost/P&L only apply to exercised (assigned) calls: the cost
-            // basis of the 100 shares at the moment they were called away,
-            // replayed from the stock_transactions ledger. Falls back to
-            // today's My Positions avg_cost if the ledger has nothing for
-            // this ticker yet (e.g. before the one-time backfill has run) --
-            // less accurate, since that drifts as more shares get bought,
-            // but better than a blank cell.
-            let costCell = '—', pnlCell = '—';
+            // Stock Price Bought/Sold/P&L only apply to exercised (assigned)
+            // calls: the cost basis of the 100 shares at the moment they were
+            // called away, replayed from the stock_transactions ledger, vs.
+            // what the strike forced them to sell for. Falls back to today's
+            // My Positions avg_cost if the ledger has nothing for this ticker
+            // yet (e.g. before the one-time backfill has run) -- less
+            // accurate, since that drifts as more shares get bought, but
+            // better than a blank cell. P&L here is stock-only (sold minus
+            // bought) and never includes the option premium above.
+            let boughtCell = '—', soldCell = '—', pnlCell = '—';
             if (t.status === 'assigned') {
               const shares = (t.contracts || 1) * 100;
               const ticker = (t.ticker||'').toUpperCase();
@@ -1174,11 +1180,12 @@ create policy "Allow all" on public.trades for all using (true) with check (true
                 avgCost = (pos && pos.avg_cost != null) ? pos.avg_cost : null;
               }
               if (avgCost != null) {
-                const cost = avgCost * shares;
-                const saleValue = (t.strike || 0) * shares;
-                const stockPnl = saleValue - cost;
+                const bought = avgCost * shares;
+                const sold = (t.strike || 0) * shares;
+                const stockPnl = sold - bought;
                 const pnlCls = stockPnl >= 0 ? 'pnl-positive' : 'pnl-negative';
-                costCell = `$${cost.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+                boughtCell = `$${bought.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+                soldCell = `$${sold.toLocaleString(undefined,{maximumFractionDigits:0})}`;
                 pnlCell = `<span class="${pnlCls}">${stockPnl >= 0 ? '+' : '-'}$${Math.abs(stockPnl).toLocaleString(undefined,{maximumFractionDigits:0})}</span>`;
               }
             }
@@ -1192,7 +1199,8 @@ create policy "Allow all" on public.trades for all using (true) with check (true
             <td>${t.contracts||1}</td>
             <td><span class="status-badge status-${t.status||'open'}">${(t.status||'open').replace('_',' ')}</span></td>
             <td>${t.total_pnl != null ? fmtPnL(t.total_pnl) : '—'}</td>
-            <td>${costCell}</td>
+            <td>${boughtCell}</td>
+            <td>${soldCell}</td>
             <td>${pnlCell}</td>
           </tr>`;
           }).join('')}
