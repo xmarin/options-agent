@@ -27,6 +27,8 @@
     h3 { font-size: 0.98rem; margin-bottom: 10px; }
     .sub { margin-top: 8px; color: var(--muted); }
     .last-updated { font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
+    .how-it-works-link { display: inline-block; font-size: 0.8rem; color: var(--accent); margin-top: 6px; text-decoration: none; }
+    .how-it-works-link:hover { text-decoration: underline; }
 
     /* ── Tabs ── */
     .tab-nav { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
@@ -74,8 +76,6 @@
     .warn-box.warn  { background: rgba(240,180,41,.12); color: #ffd479; border-color: rgba(240,180,41,.25); }
     .warn-box.good  { background: rgba(47,191,113,.12); color: #89e0af; border-color: rgba(47,191,113,.25); }
     .warn-box.bad   { background: rgba(255,93,93,.12);  color: #ffb3b3; border-color: rgba(255,93,93,.25);  }
-    .methodology-list { list-style: disc; padding-left: 20px; line-height: 1.8; font-size: .92rem; }
-    .small-note { font-size: .8rem; color: var(--muted); margin-top: 10px; }
 
     /* ── P&L tab ── */
     .stats-row { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 12px; margin-bottom: 18px; }
@@ -168,6 +168,7 @@
       <h1>Options Agent Dashboard</h1>
       <div class="sub">Weekly covered-call ideas, P&amp;L tracking, and trade logging.</div>
       <div id="lastUpdated" class="last-updated">Loading…</div>
+      <a class="how-it-works-link" href="https://claude.ai/code/artifact/8c1c0d6e-3b40-4bd3-ba58-1c236038835b" target="_blank" rel="noopener">📖 How It Works &mdash; plain-language explainer</a>
     </div>
     <div class="toolbar">
       <label for="reportSelect">Report:</label>
@@ -212,22 +213,6 @@
     <div class="panel">
       <h2>Top 10 Candidates</h2>
       <div id="top10Cards" class="cards"></div>
-    </div>
-    <div class="panel">
-      <h2>Methodology</h2>
-      <ul class="methodology-list">
-        <li><strong>Covered Call Action</strong>: the dashboard shows the exact call contract to <strong>sell to open</strong>.</li>
-        <li><strong>Scanned Stock Price</strong>: underlying price captured when the report was generated.</li>
-        <li><strong>Live Stock Price</strong>: current underlying quote pulled during live overlay generation.</li>
-        <li><strong>Scanned Premium</strong>: based on option quote captured at report generation time.</li>
-        <li><strong>Live Overlay</strong>: compares current option bid/ask with scanned bid/ask for the same contract.</li>
-        <li><strong>HV Rank</strong>: where current 21-day realized volatility sits vs. its 52-week range (higher = better for selling premium).</li>
-        <li><strong>RSI Signal</strong>: RSI 45–65 is the sweet spot for covered calls — trending but not overbought.</li>
-        <li><strong>Beta</strong>: stocks near beta 1.0 score best; very high or very low beta is penalised.</li>
-        <li><strong>Return on Capital</strong>: premium divided by capital required (stock price × 100).</li>
-        <li><strong>Annual Yield</strong>: weekly return annualized for comparison only.</li>
-      </ul>
-      <div class="small-note">Always verify the exact option symbol, strike, and expiration before placing any order.</div>
     </div>
     </div><!-- /picksContent -->
   </div>
