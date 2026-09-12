@@ -1539,7 +1539,7 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       // can be computed from the cost basis at that moment, not today's
       // blended average. Every row in the export is included here (upserted,
       // so re-importing an overlapping file never duplicates).
-      const stockTxns = [];
+      const rawStockTxns = [];
       txns.forEach(t => {
         if (!['Buy', 'Sell'].includes(t.Action)) return;
         const sym = (t.Symbol || '').trim().toUpperCase();
@@ -1548,7 +1548,7 @@ create policy "Allow all" on public.trades for all using (true) with check (true
         const price = parseFloat(String(t.Price   || '0').replace(/[$,]/g, '')) || null;
         const amount = parseFloat(String(t.Amount || '0').replace(/[$,]/g, '')) || null;
         if (!qty || isNaN(qty)) return;
-        stockTxns.push({
+        rawStockTxns.push({
           ticker:           sym,
           transaction_date: parseSchwabDate((t.Date || '').trim()),
           action:           t.Action.toLowerCase(),
@@ -1557,6 +1557,23 @@ create policy "Allow all" on public.trades for all using (true) with check (true
           amount,
         });
       });
+      // Schwab sometimes splits one order into several identical line items
+      // (same ticker/date/action/price, different lot/fill). Merge those by
+      // summing shares/amount -- doesn't change the weighted-average cost
+      // basis (price is identical), and avoids colliding with itself on the
+      // (ticker, date, action, shares, price) upsert key.
+      const stockTxnMap = new Map();
+      rawStockTxns.forEach(r => {
+        const key = `${r.ticker}|${r.transaction_date}|${r.action}|${r.price}`;
+        const existing = stockTxnMap.get(key);
+        if (existing) {
+          existing.shares += r.shares;
+          if (existing.amount != null && r.amount != null) existing.amount += r.amount;
+        } else {
+          stockTxnMap.set(key, { ...r });
+        }
+      });
+      const stockTxns = Array.from(stockTxnMap.values());
 
     return { trades, stockChanges, stockTxns };
   }

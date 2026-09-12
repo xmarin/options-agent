@@ -98,7 +98,27 @@ def extract_stock_rows(txns: list[dict]) -> list[dict]:
             'price':            price,
             'amount':           amount,
         })
-    return rows
+    return merge_same_day_fills(rows)
+
+
+def merge_same_day_fills(rows: list[dict]) -> list[dict]:
+    """Schwab sometimes splits one order into several identical line items
+    (same ticker/date/action/price, different lot/fill) -- e.g. three
+    separate 500-share sells at the same price on the same day. Merge those
+    by summing shares/amount: it doesn't change the weighted-average cost
+    basis (the price is identical), and it's what lets the unique constraint
+    (ticker, date, action, shares, price) upsert safely instead of colliding
+    with itself."""
+    merged: dict[tuple, dict] = {}
+    for r in rows:
+        key = (r['ticker'], r['transaction_date'], r['action'], r['price'])
+        if key in merged:
+            merged[key]['shares'] += r['shares']
+            if merged[key]['amount'] is not None and r['amount'] is not None:
+                merged[key]['amount'] += r['amount']
+        else:
+            merged[key] = dict(r)
+    return list(merged.values())
 
 
 def load_transactions(path: str) -> list[dict]:
