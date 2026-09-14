@@ -3,50 +3,50 @@
   "last_week_recap": "",
   "best_trade": {
     "ticker": "AMD",
-    "reason": "AMD is an owned stock, making the covered call immediately actionable without additional capital. It offers a strong final score of 0.8847 and a high weekly income estimate of $785 on a $48,645 capital base. It is slightly OTM with a good delta of 0.343, providing balanced downside protection and decent upside potential. This contract also has the highest liquidity score in the top 10 and no earnings risk within the expiration window.",
-    "biggest_risk": "The biggest risk is the stock price increasing above the $500 strike, leading to assignment which caps further upside gains beyond the strike price plus premium."
+    "reason": "AMD is the top-ranked weekly covered call candidate that the investor already owns, making it immediately actionable without additional capital. It offers a strong weekly income estimate of $785 with a 1.61% return on capital, solid liquidity, balanced risk metrics, neutral trend, and no earnings risk this week.",
+    "biggest_risk": "The primary risk is that AMD's high beta (3.985) could lead to unexpected price swings, potentially causing early assignment if the stock price surges well above the 500 strike."
   },
-  "overall_summary": "This week's candidates rank highly due to good liquidity, balanced deltas near the 0.38 target, reasonable time decay (4 days to expiration), and low earnings risk. Owned stocks AMD and TSLA appear very attractive for covered calls given minimal additional costs and decent returns. Non-owned names like MU and DELL show higher annual yields but require capital allocation and carry more exposure. The investor also owns NFLX and HIMS which are not in the top weekly candidates but remain part of the portfolio for potential future trades.",
+  "overall_summary": "This week's covered call candidates rank highly due to good premiums with balanced deltas around 0.3, moderate out-of-the-money strikes, no imminent earnings risk, and solid liquidity. Owned positions AMD and TSLA are strong actionable candidates, with AMD providing a higher premium and return on capital. Non-owned stocks like MU and DELL also show attractive metrics but require purchasing shares. The investor also owns NFLX and HIMS, which did not rank in the current top 10 but remain potential candidates for future trades.",
   "top_10_notes": [
     {
       "ticker": "AMD",
-      "comment": "Owned stock, very strong candidate with high liquidity, balanced OTM, and immediate actionability."
+      "comment": "Owned stock with highest final score and premium; balanced risk and strong liquidity; no earnings risk."
     },
     {
       "ticker": "TSLA",
-      "comment": "Owned stock with a good weekly return (1.32%) and positive trend, also immediately actionable."
+      "comment": "Owned stock with good liquidity and uptrend but lower return on capital than AMD."
     },
     {
       "ticker": "MU",
-      "comment": "High premium and annual yield but not currently owned, requiring significant capital."
+      "comment": "High premium and final score but not currently owned, requiring additional capital; low earnings risk."
     },
     {
       "ticker": "DELL",
-      "comment": "Good yield and positive trend, but lower liquidity and not owned."
-    },
-    {
-      "ticker": "META",
-      "comment": "Less desirable due to lower score and being very close to the strike price with a very high RSI (84.4), which may indicate overbought conditions."
-    },
-    {
-      "ticker": "MRNA",
-      "comment": "Attractive annual yield and volatility but not owned; high HV rank indicates higher price variability."
-    },
-    {
-      "ticker": "HOOD",
-      "comment": "Acceptable metrics but lower premium score and not owned."
+      "comment": "Good premium and return but not owned; volume and liquidity lower than AMD and TSLA."
     },
     {
       "ticker": "COIN",
-      "comment": "High implied volatility percentile (93.0) suggests expensive premium but also higher risk; not owned."
+      "comment": "High annual yield and implied volatility; not owned; stable uptrend."
+    },
+    {
+      "ticker": "MRNA",
+      "comment": "Strong recent price return and earnings safety; not owned and lower liquidity."
     },
     {
       "ticker": "MRVL",
-      "comment": "Good premium and delta but relatively lower liquidity and not owned."
+      "comment": "Decent return metrics but lower liquidity and not owned."
     },
     {
-      "ticker": "ADBE",
-      "comment": "Moderate premium and liquidity concerns; RSI low at 38.5 indicating potential weakness."
+      "ticker": "HOOD",
+      "comment": "Lower return on capital and premium; high HV rank (historical volatility) but not owned."
+    },
+    {
+      "ticker": "CRWD",
+      "comment": "Lower return with declining recent trend; relatively low IV percentile."
+    },
+    {
+      "ticker": "META",
+      "comment": "High RSI indicating possible overbought condition; lowest final score among top 10; not owned."
     }
   ]
 }
