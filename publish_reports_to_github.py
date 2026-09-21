@@ -31,11 +31,25 @@ def main():
     if not LOCAL_PUBLISHED_DIR.exists():
         raise RuntimeError("Local published/ folder does not exist")
 
+    today = date.today().isoformat()
+
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_dir = Path(tmpdir) / "repo"
 
         # Clone fresh repo into temp directory
         run(["git", "clone", REPO_URL, str(repo_dir)])
+
+        # The Render cron has (twice now) fired twice for the same Monday --
+        # two full pipeline runs racing to publish near-simultaneously. If
+        # another run already pushed today's dated report while we were
+        # scanning, there's nothing meaningful left for us to add: skip
+        # instead of fighting it out over a merge conflict.
+        if (repo_dir / "published" / f"covered_call_report_{today}.csv").exists():
+            print(
+                f"published/covered_call_report_{today}.csv is already on origin/main -- "
+                "today's reports were already published by another run. Skipping."
+            )
+            return
 
         # Configure git identity
         run(["git", "config", "user.name", GITHUB_USERNAME], cwd=repo_dir)
@@ -76,9 +90,24 @@ def main():
             print("No published file changes to commit.")
             return
 
-        commit_message = f"Update published reports {date.today().isoformat()}"
+        commit_message = f"Update published reports {today}"
         run(["git", "commit", "-m", commit_message], cwd=repo_dir)
-        run(["git", "pull", "--rebase", "origin", "main"], cwd=repo_dir)
+
+        pull_result = subprocess.run(
+            ["git", "pull", "--rebase", "origin", "main"], cwd=repo_dir
+        )
+        if pull_result.returncode != 0:
+            # Only real explanation for a conflict here: another run of this
+            # same job published its own (equally valid) copy of today's
+            # reports in the few seconds since our early check above. Back
+            # out cleanly rather than crashing the cron job over it.
+            print(
+                "Rebase conflict pulling origin/main -- another run most likely "
+                "published today's reports concurrently. Abandoning this push."
+            )
+            subprocess.run(["git", "rebase", "--abort"], cwd=repo_dir, check=False)
+            return
+
         run(["git", "push", "origin", "main"], cwd=repo_dir)
 
 
