@@ -38,6 +38,7 @@ python3 publish_reports_to_github.py
 ### Required env vars (set in Render dashboard, NOT committed)
 - `SUPABASE_URL` — base URL only, e.g. `https://tmlpqjlnnsjbwyjvlmeo.supabase.co` (no trailing `/rest/v1/`)
 - `SUPABASE_ANON_KEY` — new format starts with `sb_publishable_...`; use only `Authorization: Bearer` header (no `apikey` header)
+- `SUPABASE_SERVICE_ROLE_KEY` — optional, cron job only, never exposed to the dashboard/browser. Lets the scanner read `positions.avg_cost` (RLS on that table is authenticated-only) to enforce the cost-basis floor filter. If unset, that filter just no-ops.
 - `TRADIER_API_KEY`
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL` (default: `gpt-4o-mini`)
@@ -70,7 +71,7 @@ Scans S&P 500 stocks for weekly covered-call candidates. Outputs:
 - `published/covered_call_report_YYYY-MM-DD.csv`
 - `published/covered_call_report_latest.csv`
 
-Filtering criteria: delta range, min bid, min OTM%, min open interest, DTE window.
+Filtering criteria: delta range, min bid, min OTM%, min open interest, DTE window, and (for owned tickers) a cost-basis floor — a strike is never suggested at or below the position's current `avg_cost`, so an assignment can never lock in a stock-side loss. Requires `SUPABASE_SERVICE_ROLE_KEY`; no-ops if unset.
 
 ### `generate_weekly_summary.py`
 Reads the latest scanner CSV, fetches last 2 weeks of closed trades from Supabase, builds a GPT prompt, and saves:
