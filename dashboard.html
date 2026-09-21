@@ -313,7 +313,7 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       <!-- Live positions panel -->
       <div class="panel">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
-          <h2><span class="pos-live-dot"></span>Live Position Tracker</h2>
+          <h2><span class="pos-live-dot"></span>Current Stocks in Portfolio</h2>
           <div style="display:flex;gap:10px;align-items:center;">
             <span id="posLastRefresh" style="font-size:.8rem;color:var(--muted);">—</span>
             <button class="pos-refresh-btn" id="refreshPosBtn">↻ Refresh Prices</button>
@@ -330,6 +330,13 @@ create policy "Allow all" on public.trades for all using (true) with check (true
         <h2>Open Call Contracts</h2>
         <p style="color:var(--muted);font-size:.88rem;margin-bottom:14px;">Active covered call contracts you've sold to open.</p>
         <div class="trades-table-wrap" id="openCallsTableWrap"></div>
+      </div>
+
+      <!-- Stocks Exercised panel (shown only once something has been assigned) -->
+      <div class="panel" id="exercisedStocksPanel" style="display:none;">
+        <h2>Stocks Exercised</h2>
+        <p style="color:var(--muted);font-size:.88rem;margin-bottom:14px;">Every ticker where a call has ever been assigned, aggregated across all such calls for that ticker — including tickers you no longer hold.</p>
+        <div class="trades-table-wrap" id="exercisedStocksTableWrap"></div>
       </div>
 
       <!-- No positions notice -->
@@ -1229,10 +1236,12 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     const tableWrap    = document.getElementById('positionsTableWrap');
     const importNotice = document.getElementById('posImportNotice');
     const openCallsPanel = document.getElementById('openCallsPanel');
+    const exercisedPanel = document.getElementById('exercisedStocksPanel');
 
     tableWrap.innerHTML = '<p style="color:var(--muted)">Loading…</p>';
     importNotice.style.display   = 'none';
     openCallsPanel.style.display = 'none';
+    exercisedPanel.style.display = 'none';
 
     // 1. Load positions from Supabase
     let positions = [];
@@ -1241,30 +1250,44 @@ create policy "Allow all" on public.trades for all using (true) with check (true
       if (!error && data) positions = data;
     } catch(e) {}
 
+    // 2. Trades and the stock ledger are needed for both the current-holdings
+    // table and the exercised-stocks table below, regardless of whether
+    // anything is currently held.
+    const allTrades = await loadAllTrades();
+    const stockLedger = await loadStockLedger();
+
+    // Total premium ever collected, and total calls ever sold, per ticker
+    // (any status -- open, expired, assigned, closed).
+    const premiumByTicker = {};
+    const callsCountByTicker = {};
+    allTrades.forEach(t => {
+      const k = (t.ticker||'').toUpperCase();
+      if (!k) return;
+      callsCountByTicker[k] = (callsCountByTicker[k] || 0) + 1;
+      if (t.total_premium != null) premiumByTicker[k] = (premiumByTicker[k] || 0) + t.total_premium;
+    });
+
+    // 3. Render the exercised-stocks table -- independent of current
+    // holdings, so a ticker fully called away (and no longer in `positions`
+    // at all) still shows up here.
+    renderExercisedStocksTable(allTrades, stockLedger, exercisedPanel);
+
     if (!positions.length) {
       tableWrap.innerHTML = '';
       importNotice.style.display = 'block';
+      _positionsInitialized = true;
       return;
     }
 
-    // 2. Fetch live prices from Yahoo Finance (used by the Open Calls panel below)
+    // 4. Fetch live prices from Yahoo Finance
     const tickers  = positions.map(p => p.ticker);
     const priceMap = await fetchLivePrices(tickers);
     document.getElementById('posLastRefresh').textContent = `Updated ${new Date().toLocaleTimeString()}`;
 
-    // 3. Total premium ever collected per ticker (all calls sold against it, any status)
-    const allTrades = await loadAllTrades();
-    const premiumByTicker = {};
-    allTrades.forEach(t => {
-      if (t.total_premium == null) return;
-      const k = (t.ticker||'').toUpperCase();
-      premiumByTicker[k] = (premiumByTicker[k] || 0) + t.total_premium;
-    });
+    // 5. Render positions table
+    renderPositionsTable(positions, priceMap, premiumByTicker, callsCountByTicker);
 
-    // 4. Render positions table
-    renderPositionsTable(positions, premiumByTicker);
-
-    // 5. Load and render open calls
+    // 6. Render open calls
     let openCalls = allTrades.filter(t => t.status === 'open').sort((a,b) => new Date(a.expiration||0) - new Date(b.expiration||0));
 
     if (openCalls.length) {
@@ -1275,19 +1298,19 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     _positionsInitialized = true;
   }
 
-  function renderPositionsTable(positions, premiumByTicker = {}) {
+  function renderPositionsTable(positions, priceMap = {}, premiumByTicker = {}, callsCountByTicker = {}) {
     const rows = positions.map(p => {
-      const contracts = Math.floor(p.shares / 100);
-      const contractBadge = contracts >= 1
-        ? `<span style="color:var(--accent);font-weight:600;">${contracts}</span>`
-        : `<span style="color:var(--muted)">—</span>`;
-      const premium = premiumByTicker[(p.ticker||'').toUpperCase()] || 0;
+      const ticker = (p.ticker||'').toUpperCase();
+      const livePrice = priceMap[p.ticker]?.price ?? null;
+      const premium = premiumByTicker[ticker] || 0;
+      const callsCount = callsCountByTicker[ticker] || 0;
 
       return `<tr>
         <td><strong>${p.ticker}</strong></td>
         <td>${p.shares.toLocaleString()}</td>
         <td>$${(p.total_cost||0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}</td>
-        <td>${contractBadge}</td>
+        <td>${livePrice != null ? `$${livePrice.toFixed(2)}` : '<span style="color:var(--muted)">—</span>'}</td>
+        <td>${callsCount}</td>
         <td>$${premium.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}</td>
       </tr>`;
     }).join('');
@@ -1295,7 +1318,74 @@ create policy "Allow all" on public.trades for all using (true) with check (true
     document.getElementById('positionsTableWrap').innerHTML = `
       <table>
         <thead><tr>
-          <th>Ticker</th><th>Shares</th><th>Cost Basis</th><th>Contracts</th><th>Premium Collected</th>
+          <th>Ticker</th><th>Shares</th><th>Cost Basis</th><th>Current Stock Price</th><th>Number of Calls Sold</th><th>Premium Collected</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  // Aggregates every assigned (exercised) call by ticker -- shares called
+  // away, total cost basis at the moment of each assignment (replayed from
+  // the stock_transactions ledger, same as Trade History's Cost/P&L
+  // columns), total sale value at the strike, how many calls were exercised,
+  // premium collected on just those calls, and the resulting stock-side P&L.
+  // Independent of current `positions`, so a ticker sold out entirely still
+  // shows up here.
+  function renderExercisedStocksTable(allTrades, stockLedger, panelEl) {
+    const assigned = allTrades.filter(t => t.status === 'assigned');
+    const wrap = document.getElementById('exercisedStocksTableWrap');
+
+    if (!assigned.length) {
+      panelEl.style.display = 'none';
+      return;
+    }
+    panelEl.style.display = 'block';
+
+    const byTicker = {};
+    assigned.forEach(t => {
+      const ticker = (t.ticker||'').toUpperCase();
+      const shares = (t.contracts || 1) * 100;
+      let avgCost = costBasisAsOf(stockLedger[ticker], t.close_date || t.transaction_date);
+      const bought = avgCost != null ? avgCost * shares : null;
+      const sold = (t.strike || 0) * shares;
+
+      if (!byTicker[ticker]) {
+        byTicker[ticker] = { shares: 0, bought: 0, boughtKnown: true, sold: 0, calls: 0, premium: 0 };
+      }
+      const row = byTicker[ticker];
+      row.shares += shares;
+      row.sold += sold;
+      row.calls += 1;
+      row.premium += t.total_premium || 0;
+      if (bought != null) row.bought += bought;
+      else row.boughtKnown = false;
+    });
+
+    const rows = Object.entries(byTicker)
+      .sort((a, b) => b[1].sold - a[1].sold)
+      .map(([ticker, r]) => {
+        const costCell = r.boughtKnown ? `$${r.bought.toLocaleString(undefined,{maximumFractionDigits:0})}` : '—';
+        const pnl = r.boughtKnown ? r.sold - r.bought : null;
+        const pnlCls = pnl != null ? (pnl >= 0 ? 'pnl-positive' : 'pnl-negative') : '';
+        const pnlCell = pnl != null
+          ? `<span class="${pnlCls}">${pnl >= 0 ? '+' : '-'}$${Math.abs(pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</span>`
+          : '—';
+        return `<tr>
+          <td><strong>${ticker}</strong></td>
+          <td>${r.shares.toLocaleString()}</td>
+          <td>${costCell}</td>
+          <td>$${r.sold.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
+          <td>${r.calls}</td>
+          <td>$${r.premium.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
+          <td>${pnlCell}</td>
+        </tr>`;
+      }).join('');
+
+    wrap.innerHTML = `
+      <table>
+        <thead><tr>
+          <th>Ticker</th><th>Shares</th><th>Cost Basis</th><th>Price Stock Exercised</th>
+          <th>Number of Calls Sold</th><th>Premium Collected</th><th>P&amp;L</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>`;
