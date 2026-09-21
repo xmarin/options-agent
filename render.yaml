@@ -47,3 +47,8 @@ services:
         sync: false   # set manually in Render dashboard
       - key: SUPABASE_ANON_KEY
         sync: false   # set manually in Render dashboard
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false   # set manually in Render dashboard -- server-side only, never expose to the dashboard/browser.
+                       # Lets the scanner read `positions.avg_cost` (RLS there is authenticated-only, unlike
+                       # `trades`) to enforce a cost-basis floor on suggested strikes. Optional: if unset, that
+                       # filter just no-ops and everything else runs normally.
