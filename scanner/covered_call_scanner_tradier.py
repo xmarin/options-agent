@@ -360,6 +360,43 @@ def get_earnings_map(days_ahead: int = 90) -> dict:
         return {}
 
 
+def get_owned_avg_costs() -> dict:
+    """Ticker -> current average cost basis, from Supabase `positions`.
+
+    Used so a covered call is never suggested with a strike below what was
+    actually paid for the shares -- if it gets assigned, that would lock in
+    a loss on the stock leg even though the call itself made money.
+
+    `positions` RLS is authenticated-only (see scripts/import_schwab.py),
+    so the plain SUPABASE_ANON_KEY used elsewhere in this project can't
+    read it. Requires SUPABASE_SERVICE_ROLE_KEY, server-side only -- never
+    exposed to the dashboard/browser.
+    """
+    url = os.getenv("SUPABASE_URL", "").rstrip("/")
+    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+    if not url or not service_key:
+        print("  ! SUPABASE_SERVICE_ROLE_KEY not set -- skipping cost-basis floor filter")
+        return {}
+
+    try:
+        resp = requests.get(
+            f"{url}/rest/v1/positions",
+            params={"select": "ticker,avg_cost"},
+            headers={"Authorization": f"Bearer {service_key}", "apikey": service_key},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        rows = resp.json()
+        return {
+            str(r["ticker"]).upper(): float(r["avg_cost"])
+            for r in rows
+            if r.get("ticker") and r.get("avg_cost") is not None
+        }
+    except Exception as e:
+        print(f"  ! Could not load positions avg_cost — {e}")
+        return {}
+
+
 def days_until(date_str: str | None) -> int | None:
     if not date_str:
         return None
@@ -431,7 +468,12 @@ def calculate_component_scores(
     }
 
 
-def scan_one_ticker(ticker: str, earnings_map: dict, spy_closes: list[float] | None = None) -> list[dict]:
+def scan_one_ticker(
+    ticker: str,
+    earnings_map: dict,
+    spy_closes: list[float] | None = None,
+    owned_avg_costs: dict | None = None,
+) -> list[dict]:
     spot = get_last_price(ticker)
     if not spot or spot <= 0:
         return []
@@ -490,6 +532,15 @@ def scan_one_ticker(ticker: str, earnings_map: dict, spy_closes: list[float] | N
             continue
 
         if open_interest < MIN_OPEN_INTEREST:
+            continue
+
+        # Never suggest a strike at or below what the shares actually cost --
+        # an assignment there would lock in a stock-side loss even if the
+        # call itself collected premium. Only bites when a position is
+        # underwater vs. its avg cost (the OTM filter above already keeps
+        # strike > today's live price, which isn't the same thing).
+        min_strike = (owned_avg_costs or {}).get(ticker.upper())
+        if min_strike is not None and strike <= min_strike:
             continue
 
         premium = bid * 100.0
@@ -664,11 +715,16 @@ def main():
     earnings_map = get_earnings_map(days_ahead=90)
     print(f"Earnings entries loaded: {len(earnings_map)}")
 
+    print("Loading owned position cost basis...")
+    owned_avg_costs = get_owned_avg_costs()
+    if owned_avg_costs:
+        print(f"  Cost-basis floor active for: {', '.join(sorted(owned_avg_costs))}")
+
     all_rows = []
     for i, ticker in enumerate(tickers, start=1):
         try:
             print(f"[{i}/{len(tickers)}] {ticker}")
-            all_rows.extend(scan_one_ticker(ticker, earnings_map, _SPY_CLOSES))
+            all_rows.extend(scan_one_ticker(ticker, earnings_map, _SPY_CLOSES, owned_avg_costs))
             time.sleep(0.15)
         except Exception as e:
             print(f"  ! {ticker} error: {e}")
